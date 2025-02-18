@@ -8,6 +8,9 @@ on:
 jobs:
   publish:
     runs-on: windows-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/mindm
     permissions:
       contents: read
       id-token: write
