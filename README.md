@@ -60,6 +60,8 @@ Not supported:
   
 ## Development
   
+### Installation  
+  
 ```bash
 git clone htpps://gtihub.com/robertZaufall/mindm
 python3 -m pip install --upgrade build
@@ -68,7 +70,9 @@ pip install --upgrade pip
 pip install -e .
 python3 ./tests/clone_map_by_dom.py
 ```
-
+  
+### High level functions (mindmap_helper-class)  
+  
 High level functions of the mindmap_helper-class:  
 | Function Name                            | Description                                                                                  |
 |------------------------------------------|----------------------------------------------------------------------------------------------|
@@ -90,8 +94,9 @@ High level functions of the mindmap_helper-class:
 | set_background_image                     | Applies an image to the document background.                                                 |
 | get_library_folder                       | Returns the library folder path from Mindmanager.                                            |
 | get_grounding_information                | Retrieves selected topic texts and their levels or falls back to the central topic.          |
-
-Raw functions of the mindmanager-class on Windows:  
+  
+### Low level functions (mindmanager-class)  
+#### Windows:  
 | Function Name                  | Description                                                                                   |
 |--------------------------------|-----------------------------------------------------------------------------------------------|
 | get_mindmanager_version        | Returns a String containing MindManager version number (e.g. "26", "25", etc.)                |
@@ -114,7 +119,7 @@ Raw functions of the mindmanager-class on Windows:
 | add_subtopic_to_topic          | Adds a new subtopic to a topic and returns it                                                 |
 | set_topic_from_mindmap_topic   | Updates the topic and returns a tuple of (topic object, topic GUID)                           |
   
-Raw functions of the mindmanager-class on MacOS:  
+#### MacOS:  
 | Function Name                    | Description                                                           |
 |----------------------------------|-----------------------------------------------------------------------|
 | document_exists                  | Returns a Boolean indicating document availability                    |
