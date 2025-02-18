@@ -4,15 +4,26 @@ Python library for interacting with local installed MindManager(tm) on Windows a
 
 ## Installation
 
-Install this tool using `pip`:
+Install using `pip`:
 ```bash
 pip install mindm
 ```
 
 ## Getting started
 
-tba  
+Example for loading a mindmap from an open mindmap document and cloning it to a new document:  
+```python
+import mindm.mindmap_helper as mm
 
-## Examples
+document = mm.MindmapDocument()
+if not document.get_mindmap():
+    print("No mindmap found.")
+else:
+    document.create_mindmap()
+```
 
-tba  
+## Platform specific functionality
+
+### Windows
+
+### MacOS

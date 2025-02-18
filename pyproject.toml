@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mindm"
+version = "0.1.0"
+authors = [
+  { name="Robert Zaufall", email="mail@zaufall.de" },
+]
+description = "Python library for interacting with local installed MindManager(tm) on Windows and MacOS platform."
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS :: Mac OS X",
+]
+
+dependencies = [
+  "pywin32; sys_platform == 'win32'",
+  "appscript; sys_platform == 'darwin'",
+  "regex",
+  "markdown"
+]
+
+[project.license]
+text = "MIT"
+
+[project.urls]
+Homepage = "https://github.com/robertZaufall/mindm"
+Issues = "https://github.com/robertZaufall/mindm/issues"
+
