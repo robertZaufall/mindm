@@ -2,6 +2,8 @@ import sys
 import os
 import uuid
 
+import mindm.mindmanager as mm
+
 DUPLICATED_TAG = 'Duplicated'
 DUPLICATE_LABEL = 'DUPLICATE'
 
@@ -95,14 +97,7 @@ class MindmapDocument:
         self.selected_topic_ids: list[str] = []
         self.max_topic_level: int = 0
 
-        if sys.platform.startswith('win'):
-            import mindm.mindmanager_win as mindmanager
-            platform = "win"
-        elif sys.platform.startswith('darwin'):
-            import mindm.mindmanager_mac as mindmanager
-            platform = "darwin"
-
-        self.mindm = mindmanager.Mindmanager(charttype)
+        self.mindm = mm.Mindmanager(charttype)
 
     def get_mindmap(self, topic=None):
         if not self.mindm.document_exists():
