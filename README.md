@@ -63,15 +63,15 @@ Not supported:
 ### Installation  
   
 ```bash
-git clone htpps://gtihub.com/robertZaufall/mindm
+git clone htpps://github.com/robertZaufall/mindm
 
 pip install --upgrade build
-python3 -m build
+python -m build
 
 pip install -e .
 pip install --extra-index-url https://pypi.org/simple mindm
 
-python3 ./tests/clone_map_by_dom.py
+python ./tests/clone_map_by_dom.py
 ```
   
 ### High level functions (mindmap_helper-class)  
