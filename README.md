@@ -64,35 +64,45 @@ Not supported:
   
 ```bash
 git clone htpps://gtihub.com/robertZaufall/mindm
-python3 -m pip install --upgrade build
+
+pip install --upgrade build
 python3 -m build
-pip install --upgrade pip
+
 pip install -e .
+pip install --extra-index-url https://pypi.org/simple mindm
+
 python3 ./tests/clone_map_by_dom.py
 ```
   
 ### High level functions (mindmap_helper-class)  
   
 High level functions of the mindmap_helper-class:  
-| Function                                                       | Description                                                                                                                                                                                                                  |
-|----------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `get_mindmap(topic=None)`                                      | Retrieves the current mindmap from MindManager, processes the selection, computes the maximum topic level, and builds the internal mindmap structure.                                                   |
-| `get_max_topic_level(mindmap_topic, max_topic_level=0, visited=None)` | Recursively calculates the maximum level (depth) among all topics in the mindmap, ensuring cycles are avoided.                                                                                              |
-| `get_parent_topic(topic)`                                      | Returns the parent topic for a given MindManager topic by converting it into an internal `MindmapTopic` representation.                                                                                   |
-| `get_selection()`                                              | Retrieves the selected topics from MindManager and returns them as a list of `MindmapTopic` objects with their respective levels and parent information.                                                |
-| `get_relationships_from_mindmap(mindmap, references, visited=None)` | Recursively traverses the mindmap to collect relationship references (directional links) between topics and appends them to the provided list.                                                            |
-| `get_topic_links_from_mindmap(mindmap, links, visited=None)`   | Recursively collects topic link information from the mindmap into a list of `MindmapReference` objects, avoiding duplicates by tracking visited topics.                                                |
-| `get_tags_from_mindmap(mindmap, tags, visited=None)`           | Recursively gathers unique tag texts from the mindmap and appends them to the provided list.                                                                                                               |
-| `get_map_icons_and_fix_refs_from_mindmap(mindmap, map_icons: list['MindmapIcon'], visited=None)` | Recursively collects map icons from the mindmap; for non-stock icons in a specific group, it replaces them with shared references from a central list to ensure consistency.                          |
-| `get_topic_texts_from_selection(mindmap_topics)`               | Extracts and returns a tuple containing lists of topic texts, levels, IDs, and a flag indicating if the central topic was selected, based on a list of `MindmapTopic` objects.                        |
-| `clone_mindmap_topic(mindmap_topic, subtopics: list['MindmapTopic'] = None, parent=None)` | Creates a duplicate (clone) of a given `MindmapTopic`, including recursively cloning its subtopics.                                                                                                        |
-| `set_topic_from_mindmap_topic(topic, mindmap_topic, map_icons, done=None, done_global=None, level=0)` | Recursively updates MindManager’s document by creating topics and subtopics that mirror the internal `MindmapTopic` structure, also handling duplicate detection and linking.                      |
-| `create_mindmap(verbose=False)`                                | Processes the entire internal mindmap structure to create the MindManager document by generating tags, icons, relationships, and topic links, as well as preparing parent-child mappings.             |
-| `create_mindmap_and_finalize()`                                | Combines the mindmap creation and finalization steps, so the MindManager document is built and then finalized in one call.                                                                                 |
-| `finalize()`                                                   | Finalizes the MindManager document by applying finishing touches, including updating the document with the maximum topic level determined from the internal structure.                             |
-| `set_background_image(image_path)`                             | Sets a background image for the MindManager document using the provided image path.                                                                                                                      |
-| `get_library_folder()`                                         | Returns the folder path of the MindManager library, which might contain additional resources or templates used by the document.                                                                           |
-| `get_grounding_information()`                                  | Extracts grounding information by combining the central topic’s text with texts from selected subtopics, helping to provide context for further processing or analysis.                              |
+| Function | Parameters | Description |
+|---|---|---|
+| `__init__` | - charttype: str = 'auto'<br>- turbo_mode: bool = False<br>- inline_editing_mode: bool = False<br>- mermaid_mode: bool = True | Initialize a MindmapDocument instance which automates MindManager operations. |
+| `get_mindmap` | - topic (default: None) | Retrieve the mind map structure from the currently open MindManager document. |
+| `get_max_topic_level` | - mindmap_topic<br>- max_topic_level (default: 0)<br>- visited (default: None) | Recursively compute the maximum topic level within the mind map. |
+| `get_parent_topic` | - topic | Retrieve the parent topic for a given MindManager topic. |
+| `get_selection` | None | Retrieve the currently selected topics in the MindManager document. |
+| `get_mindmap_topic_from_topic` | - topic<br>- parent_topic (default: None) | Recursively convert a MindManager topic into a MindmapTopic object. |
+| `get_relationships_from_mindmap` | - mindmap<br>- references<br>- visited (default: None) | Recursively extract relationships (references) from the mindmap. |
+| `get_topic_links_from_mindmap` | - mindmap<br>- links<br>- visited (default: None) | Recursively extract topic links from the mindmap. |
+| `get_tags_from_mindmap` | - mindmap<br>- tags<br>- visited (default: None) | Recursively collect unique tags from the mindmap. |
+| `get_parents_from_mindmap` | - mindmap<br>- parents<br>- visited (default: None) | Build a dictionary mapping subtopic GUIDs to their parent's GUID. |
+| `get_map_icons_and_fix_refs_from_mindmap` | - mindmap<br>- map_icons: list['MindmapIcon']<br>- visited (default: None) | Extract icons from mindmap topics and fix their references if needed. |
+| `count_parent_and_child_occurrences` | - mindmap_topic<br>- guid_counts<br>- visited (default: None) | Recursively count the occurrences of parent and child relationships for each topic. |
+| `get_topic_texts_from_selection` | - mindmap_topics | Extract topic texts, levels, and GUIDs from selected topics. |
+| `clone_mindmap_topic` | - mindmap_topic<br>- subtopics: list['MindmapTopic'] (optional, default: None)<br>- parent (optional) | Clone a MindmapTopic instance including its subtopics. |
+| `update_done` | - topic_guid<br>- mindmap_topic<br>- level<br>- done<br>- done_global | Update tracking dictionaries for processed topics and create duplicate links/tags. |
+| `set_topic_from_mindmap_topic` | - topic<br>- mindmap_topic<br>- map_icons<br>- done (optional, default: None)<br>- done_global (optional, default: None)<br>- level (default: 0) | Create or update a MindManager topic from a MindmapTopic instance recursively. |
+| `check_parent_exists` | - topic_guid<br>- this_guid<br>- visited (default: None) | Recursively check if a parent-child relationship exists between topics. |
+| `create_mindmap` | - verbose (default: False) | Create a MindManager mindmap document from the internal MindmapTopic structure. This includes counting occurrences, extracting tags/icons, and setting up relationships and links. |
+| `create_mindmap_and_finalize` | None | Create the mindmap document and finalize it. |
+| `finalize` | None | Finalize the mindmap document by ensuring the maximum topic level is set, then calling MindManager's finalize. |
+| `set_background_image` | - image_path | Set the background image for the MindManager document. |
+| `get_library_folder` | None | Get the library folder used by MindManager. |
+| `get_grounding_information` | None | Extract grounding information from the mindmap, including the central topic and selected subtopics. |
+
   
 ### Low level functions (mindmanager-class)  
 #### Windows:  

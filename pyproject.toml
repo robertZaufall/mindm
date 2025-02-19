@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mindm"
-version = "0.1.3"
+version = "0.0.1"
 authors = [
   { name="Robert Zaufall", email="mail@zaufall.de" },
 ]
@@ -30,4 +30,3 @@ text = "MIT"
 [project.urls]
 Homepage = "https://github.com/robertZaufall/mindm"
 Issues = "https://github.com/robertZaufall/mindm/issues"
-

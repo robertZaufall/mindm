@@ -1,5 +1,3 @@
-import sys
-import os
 import uuid
 
 import mindm.mindmanager as mm
@@ -9,16 +7,38 @@ DUPLICATE_LABEL = 'DUPLICATE'
 
 class MindmapLink:
     def __init__(self, text: str = '', url: str = '', guid: str = ''):
+        """
+        Initialize a MindmapLink instance.
+
+        Args:
+            text (str): The display text for the link.
+            url (str): The URL that the link points to.
+            guid (str): A unique identifier for the link.
+        """
         self.text = text
         self.url = url
         self.guid = guid
 
 class MindmapImage:
     def __init__(self, text: str = ''):
+        """
+        Initialize a MindmapImage instance.
+
+        Args:
+            text (str): Path to the image.
+        """
         self.text = text
 
 class MindmapNotes:
     def __init__(self, text: str = '', xhtml: str = '', rtf: str = ''):
+        """
+        Initialize a MindmapNotes instance.
+
+        Args:
+            text (str): Plain text version of the notes.
+            xhtml (str): XHTML formatted notes.
+            rtf (str): RTF formatted notes.
+        """
         self.text = text
         self.xhtml = xhtml
         self.rtf = rtf
@@ -31,6 +51,17 @@ class MindmapIcon:
                  signature: str = '', 
                  path: str = '',
                  group: str = ''):
+        """
+        Initialize a MindmapIcon instance.
+
+        Args:
+            text (str): The display text for the icon.
+            is_stock_icon (bool): Flag indicating if the icon is a stock icon.
+            index (int): The index of a stock icon.
+            signature (str): A unique signature for the icon.
+            path (str): File path to the icon if it is custom.
+            group (str): The group/category of the icon.
+        """
         self.text = text
         self.is_stock_icon = is_stock_icon
         self.index = index
@@ -40,6 +71,12 @@ class MindmapIcon:
 
 class MindmapTag:
     def __init__(self, text: str = ''):
+        """
+        Initialize a MindmapTag instance.
+
+        Args:
+            text (str): The text representing the tag.
+        """
         self.text = text
 
 class MindmapReference:
@@ -48,6 +85,15 @@ class MindmapReference:
                  guid_2: str = '', 
                  direction: int = 1, 
                  label: str = ''):
+        """
+        Initialize a MindmapReference (relationship) instance.
+
+        Args:
+            guid_1 (str): The GUID of the first topic.
+            guid_2 (str): The GUID of the second topic.
+            direction (int): The direction of the reference (1 indicates a standard direction).
+            label (str): A label for the relationship.
+        """
         self.guid_1 = guid_1
         self.guid_2 = guid_2
         self.direction = direction
@@ -68,6 +114,24 @@ class MindmapTopic:
                  notes: 'MindmapNotes' = None,
                  tags: list['MindmapTag'] = None,
                  references: list['MindmapReference'] = None):
+        """
+        Initialize a MindmapTopic instance.
+
+        Args:
+            guid (str): Unique identifier for the topic.
+            text (str): The text content of the topic.
+            rtf (str): RTF formatted text for the topic.
+            level (int): The hierarchical level of the topic.
+            selected (bool): Flag to indicate if the topic is selected.
+            parent (MindmapTopic): The parent topic if any.
+            subtopics (list[MindmapTopic]): List of subtopics.
+            links (list[MindmapLink]): List of associated links.
+            image (MindmapImage): Associated image object.
+            icons (list[MindmapIcon]): List of associated icons.
+            notes (MindmapNotes): Associated notes.
+            tags (list[MindmapTag]): List of associated tags.
+            references (list[MindmapReference]): List of associated relationships.
+        """
         self.guid = guid
         self.text = text.replace('"', '`').replace("'", "`").replace("\r", "").replace("\n", "")
         self.rtf = rtf
@@ -84,8 +148,16 @@ class MindmapTopic:
 
 
 class MindmapDocument:
-
     def __init__(self, charttype: str = 'auto', turbo_mode: bool = False, inline_editing_mode: bool = False, mermaid_mode: bool = True):
+        """
+        Initialize a MindmapDocument instance which automates MindManager operations.
+
+        Args:
+            charttype (str): The type of chart to be used (orgchart, radial, auto).
+            turbo_mode (bool): Flag for enabling turbo mode -> use only text.
+            inline_editing_mode (bool): Flag for enabling inline editing mode.
+            mermaid_mode (bool): Flag for enabling mermaid mode.
+        """
         self.charttype: str = charttype
         self.turbo_mode: bool = turbo_mode
         self.inline_editing_mode: bool = inline_editing_mode
@@ -100,6 +172,16 @@ class MindmapDocument:
         self.mindm = mm.Mindmanager(charttype)
 
     def get_mindmap(self, topic=None):
+        """
+        Retrieve the mind map structure from the currently open MindManager document.
+
+        Args:
+            topic: (Optional) A specific topic from which to start building the mindmap.
+                   If not provided, the central topic is used.
+
+        Returns:
+            bool: True if the mind map was successfully retrieved, otherwise False.
+        """
         if not self.mindm.document_exists():
             print("No document found. Please open MindManager with a document.")    
             return False
@@ -107,8 +189,10 @@ class MindmapDocument:
         if topic is None:
             topic = self.mindm.get_central_topic()
         
+        # Build the mindmap topic structure from the provided topic
         mindmap = self.get_mindmap_topic_from_topic(topic)
 
+        # Retrieve the current selection information
         selection = self.get_selection()
         selected_topic_texts, selected_topic_levels, selected_topic_ids, central_topic_selected = self.get_topic_texts_from_selection(selection)
         self.central_topic_selected = central_topic_selected
@@ -120,6 +204,17 @@ class MindmapDocument:
         return True
 
     def get_max_topic_level(self, mindmap_topic, max_topic_level=0, visited=None):
+        """
+        Recursively compute the maximum topic level within the mind map.
+
+        Args:
+            mindmap_topic (MindmapTopic): The current topic to evaluate.
+            max_topic_level (int): The current maximum level found.
+            visited (set): Set of visited topic GUIDs to avoid infinite recursion.
+
+        Returns:
+            int: The highest topic level found in the mindmap.
+        """
         if visited is None:
             visited = set()
         if mindmap_topic.guid in visited:
@@ -132,6 +227,15 @@ class MindmapDocument:
         return max_topic_level
 
     def get_parent_topic(self, topic):
+        """
+        Retrieve the parent topic for a given MindManager topic.
+
+        Args:
+            topic: The current topic from which to get the parent.
+
+        Returns:
+            MindmapTopic or None: The parent topic wrapped as a MindmapTopic, or None if at the root.
+        """
         topic_level = self.mindm.get_level_from_topic(topic)
         if topic_level == 0:
             return None
@@ -145,6 +249,12 @@ class MindmapDocument:
         return parent_mindmap_topic
 
     def get_selection(self):
+        """
+        Retrieve the currently selected topics in the MindManager document.
+
+        Returns:
+            list[MindmapTopic]: A list of MindmapTopic instances representing the selection.
+        """
         selection = self.mindm.get_selection()
         mindmap_topics = []
         for topic in selection:
@@ -160,6 +270,16 @@ class MindmapDocument:
         return mindmap_topics
 
     def get_mindmap_topic_from_topic(self, topic, parent_topic=None):
+        """
+        Recursively convert a MindManager topic into a MindmapTopic object.
+
+        Args:
+            topic: The current MindManager topic to convert.
+            parent_topic (MindmapTopic): The parent MindmapTopic, if any.
+
+        Returns:
+            MindmapTopic: The converted topic with its subtopics.
+        """
         mindmap_topic = MindmapTopic(
             guid=self.mindm.get_guid_from_topic(topic),
             text=self.mindm.get_text_from_topic(topic),
@@ -182,6 +302,14 @@ class MindmapDocument:
         return mindmap_topic 
 
     def get_relationships_from_mindmap(self, mindmap, references, visited=None):
+        """
+        Recursively extract relationships (references) from the mindmap.
+
+        Args:
+            mindmap (MindmapTopic): The current topic in the mindmap.
+            references (list[MindmapReference]): List to collect the relationships.
+            visited (set): Set of visited topic GUIDs to avoid infinite recursion.
+        """
         if visited is None:
             visited = set()
         if mindmap.guid in visited:
@@ -199,6 +327,14 @@ class MindmapDocument:
             self.get_relationships_from_mindmap(subtopic, references, visited)
 
     def get_topic_links_from_mindmap(self, mindmap, links, visited=None):
+        """
+        Recursively extract topic links from the mindmap.
+
+        Args:
+            mindmap (MindmapTopic): The current topic in the mindmap.
+            links (list[MindmapReference]): List to collect topic links as MindmapReference objects.
+            visited (set): Set of visited topic GUIDs to avoid infinite recursion.
+        """
         if visited is None:
             visited = set()
         if mindmap.guid in visited:
@@ -216,6 +352,14 @@ class MindmapDocument:
             self.get_topic_links_from_mindmap(subtopic, links, visited)
 
     def get_tags_from_mindmap(self, mindmap, tags, visited=None):
+        """
+        Recursively collect unique tags from the mindmap.
+
+        Args:
+            mindmap (MindmapTopic): The current topic in the mindmap.
+            tags (list[str]): List to collect tag texts.
+            visited (set): Set of visited topic GUIDs to avoid infinite recursion.
+        """
         if visited is None:
             visited = set()
         if mindmap.guid in visited:
@@ -228,6 +372,14 @@ class MindmapDocument:
             self.get_tags_from_mindmap(subtopic, tags, visited)
 
     def get_parents_from_mindmap(self, mindmap, parents, visited=None):
+        """
+        Build a dictionary mapping subtopic GUIDs to their parent's GUID.
+
+        Args:
+            mindmap (MindmapTopic): The current topic in the mindmap.
+            parents (dict): Dictionary to store parent-child GUID mappings.
+            visited (set): Set of visited topic GUIDs to avoid infinite recursion.
+        """
         if visited is None:
             visited = set()
         if mindmap.guid in visited:
@@ -240,6 +392,14 @@ class MindmapDocument:
         return
 
     def get_map_icons_and_fix_refs_from_mindmap(self, mindmap, map_icons: list['MindmapIcon'], visited=None):
+        """
+        Extract icons from mindmap topics and fix their references if needed.
+
+        Args:
+            mindmap (MindmapTopic): The current topic in the mindmap.
+            map_icons (list[MindmapIcon]): List to collect unique icons.
+            visited (set): Set of visited topic GUIDs to avoid infinite recursion.
+        """
         if visited is None:
             visited = set()
         if mindmap.guid in visited:
@@ -247,6 +407,7 @@ class MindmapDocument:
         visited.add(mindmap.guid)
         
         for i, topic_icon_ref in enumerate(mindmap.icons):
+            # Only process non-stock icons belonging to the 'Types' group
             if not topic_icon_ref.is_stock_icon and topic_icon_ref.group == 'Types':
                 found = False
                 for map_icon in map_icons:
@@ -268,6 +429,14 @@ class MindmapDocument:
             self.get_map_icons_and_fix_refs_from_mindmap(subtopic, map_icons, visited)
 
     def count_parent_and_child_occurrences(self, mindmap_topic, guid_counts, visited=None):
+        """
+        Recursively count the occurrences of parent and child relationships for each topic.
+
+        Args:
+            mindmap_topic (MindmapTopic): The current topic in the mindmap.
+            guid_counts (dict): Dictionary to store counts with topic GUID as keys.
+            visited (set): Set of visited topic GUIDs to avoid infinite recursion.
+        """
         if visited is None:
             visited = set()
         if str(mindmap_topic.guid) == '':
@@ -286,6 +455,15 @@ class MindmapDocument:
                 self.count_parent_and_child_occurrences(subtopic, guid_counts, visited)
 
     def get_topic_texts_from_selection(self, mindmap_topics):
+        """
+        Extract topic texts, levels, and GUIDs from selected topics.
+
+        Args:
+            mindmap_topics (list[MindmapTopic]): List of topics to process.
+
+        Returns:
+            tuple: (list of topic texts, list of topic levels, list of topic GUIDs, bool indicating if the central topic is selected)
+        """
         topic_texts = []
         topic_levels = []
         topic_ids = []
@@ -301,6 +479,17 @@ class MindmapDocument:
         return topic_texts, topic_levels, topic_ids, central_topic_selected
             
     def clone_mindmap_topic(self, mindmap_topic, subtopics: list['MindmapTopic'] = None, parent=None):
+        """
+        Clone a MindmapTopic instance including its subtopics.
+
+        Args:
+            mindmap_topic (MindmapTopic): The topic to clone.
+            subtopics (list[MindmapTopic], optional): A list of subtopics to clone.
+            parent: The parent for the cloned topic.
+
+        Returns:
+            MindmapTopic: A new instance that is a clone of the given topic.
+        """
         cloned_subtopics = []
         if subtopics is not None:
             for subtopic in subtopics:
@@ -321,6 +510,16 @@ class MindmapDocument:
         )
 
     def update_done(self, topic_guid, mindmap_topic, level, done, done_global):
+        """
+        Update tracking dictionaries for processed topics and create duplicate links/tags.
+
+        Args:
+            topic_guid (str): The GUID of the current topic in MindManager.
+            mindmap_topic (MindmapTopic): The MindmapTopic being processed.
+            level (int): The current level in the topic hierarchy.
+            done (dict): Dictionary tracking topics processed at a given level.
+            done_global (dict): Global dictionary tracking processed topics for duplicate detection.
+        """
         if mindmap_topic.guid == '':
             return
         if level <= 1:
@@ -328,6 +527,7 @@ class MindmapDocument:
         elif level >= 2: 
             done[mindmap_topic.guid] = [topic_guid] if mindmap_topic.guid not in done else done[mindmap_topic.guid] + [topic_guid]
         if mindmap_topic.guid in done_global:
+            # Check for duplicate relationships and add links/tags accordingly.
             if self.guid_counts[mindmap_topic.guid]['child'] < 11 and self.guid_counts[mindmap_topic.guid]['parent'] >= 0:
                 for i in range(len(done_global[mindmap_topic.guid])):
                     link_from = topic_guid
@@ -342,6 +542,20 @@ class MindmapDocument:
             done_global[mindmap_topic.guid] = [topic_guid]
 
     def set_topic_from_mindmap_topic(self, topic, mindmap_topic, map_icons, done=None, done_global=None, level=0):
+        """
+        Create or update a MindManager topic from a MindmapTopic instance recursively.
+
+        Args:
+            topic: The current MindManager topic to update.
+            mindmap_topic (MindmapTopic): The source MindmapTopic data.
+            map_icons (list[MindmapIcon]): List of map icons to use.
+            done (dict, optional): Dictionary tracking processed topics at current level.
+            done_global (dict, optional): Global dictionary for tracking duplicate processing.
+            level (int): Current hierarchical level.
+            
+        Returns:
+            MindmapTopic: The processed MindmapTopic.
+        """
         if done is None:
             done = {}
         if done_global is None:
@@ -361,6 +575,7 @@ class MindmapDocument:
                 self.update_done(topic_guid, mindmap_topic, level, done, done_global)
 
                 if mindmap_topic.subtopics and len(mindmap_topic.subtopics) > 0:
+                    # Sort subtopics alphabetically by text
                     mindmap_topic.subtopics.sort(key=lambda sub: sub.text)
 
                 for subtopic in mindmap_topic.subtopics:
@@ -381,6 +596,17 @@ class MindmapDocument:
             print(f"Error in set_topic_from_mindmap_topic at level {level} with topic {mindmap_topic.guid}: {e}")
 
     def check_parent_exists(self, topic_guid, this_guid, visited=None):
+        """
+        Recursively check if a parent-child relationship exists between topics.
+
+        Args:
+            topic_guid (str): The GUID of the topic to check.
+            this_guid (str): The GUID that might be a parent of the topic.
+            visited (set, optional): Set of visited GUIDs to avoid infinite recursion.
+
+        Returns:
+            bool: True if the parent-child relationship exists, False otherwise.
+        """
         if visited is None:
             visited = set()
         if topic_guid in visited:
@@ -397,6 +623,13 @@ class MindmapDocument:
         return check
 
     def create_mindmap(self, verbose=False):
+        """
+        Create a MindManager mindmap document from the internal MindmapTopic structure.
+        This includes counting occurrences, extracting tags/icons, and setting up relationships and links.
+
+        Args:
+            verbose (bool): (Optional) Enable verbose output.
+        """
         tags = []
         map_icons = []
         relationships = []
@@ -422,6 +655,7 @@ class MindmapDocument:
         done_global = {}
         self.set_topic_from_mindmap_topic(topic=topic, mindmap_topic=self.mindmap, map_icons=map_icons, done={}, done_global=done_global)
 
+        # Create relationships between topics
         for reference in relationships:
             object1_guids = done_global[reference.guid_1]
             object2_guids = done_global[reference.guid_2]
@@ -429,6 +663,7 @@ class MindmapDocument:
                 for object2_guid in object2_guids:
                     self.mindm.add_relationship(object1_guid, object2_guid, reference.label)
 
+        # Create topic links
         for link in links:
             object1_guids = done_global[link.guid_1]
             object2_guids = done_global[link.guid_2]
@@ -437,21 +672,46 @@ class MindmapDocument:
                     self.mindm.add_topic_link(object1_guid, object2_guid, link.label)
 
     def create_mindmap_and_finalize(self):
+        """
+        Create the mindmap document and finalize it.
+        """
         self.create_mindmap()
         self.finalize()
 
     def finalize(self):
+        """
+        Finalize the mindmap document by ensuring the maximum topic level is set, then calling MindManager's finalize.
+        """
         if self.max_topic_level == 0:
             self.max_topic_level = self.get_max_topic_level(self.mindmap)
         self.mindm.finalize(self.max_topic_level)
     
     def set_background_image(self, image_path):
+        """
+        Set the background image for the MindManager document.
+
+        Args:
+            image_path (str): The file path to the background image.
+        """
         self.mindm.set_document_background_image(image_path)
     
     def get_library_folder(self):
+        """
+        Get the library folder used by MindManager.
+
+        Returns:
+            The path to the library folder.
+        """
         return self.mindm.library_folder
     
     def get_grounding_information(self):
+        """
+        Extract grounding information from the mindmap, including the central topic and selected subtopics.
+
+        Returns:
+            tuple: (top_most_topic, subtopics) where top_most_topic is the central topic or a concatenated string
+                   of non-selected topics, and subtopics is a comma-separated string of selected subtopics.
+        """
         central_topic_text = self.mindmap.text
         subtopics = ""
         if len(self.selected_topic_texts) == 0: 
