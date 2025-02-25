@@ -26,7 +26,14 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install setuptools wheel build twine
+          pip install setuptools wheel build twine sphinx sphinx-rtd-theme
+
+      - name: Generate documentation
+        run: |
+          cd docs
+          pip install -e ..
+          make html
+          cd ..
 
       - name: Build the package
         run: python -m build
