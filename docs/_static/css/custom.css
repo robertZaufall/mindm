@@ -1,0 +1,40 @@
+body {
+    font-size: 0.95em !important;
+}
+
+div.body h1,
+div.body h2,
+div.body h3,
+div.body h4,
+div.body h5,
+div.body h6 {
+    font-size: 160% !important;
+}
+
+div.body h2 {
+    font-size: 140% !important;
+}
+
+div.body h3 {
+    font-size: 125% !important;
+}
+
+div.body h4 {
+    font-size: 115% !important;
+}
+
+div.body h5 {
+    font-size: 110% !important;
+}
+
+div.body h6 {
+    font-size: 100% !important;
+}
+
+.body p, .body li, .body dd {
+    font-size: 0.9em;
+}
+
+dl.class, dl.function, dl.method, dl.attribute {
+    font-size: 0.9em;
+}

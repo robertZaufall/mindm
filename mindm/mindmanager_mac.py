@@ -1,3 +1,11 @@
+"""
+MacOS-specific implementation of the Mindmanager interface.
+
+This module provides MacOS platform-specific implementation for interacting
+with MindManager application, including functionality for manipulating topics,
+properties, relationships, and document structure.
+"""
+
 import os
 from appscript import *
 

@@ -1,3 +1,11 @@
+"""
+Windows-specific implementation of the Mindmanager interface.
+
+This module provides Windows platform-specific implementation for interacting
+with MindManager application, including functionality for manipulating topics,
+properties, relationships, and document structure.
+"""
+
 import os
 import win32com.client
 import winreg
