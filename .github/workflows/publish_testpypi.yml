@@ -38,6 +38,10 @@ jobs:
           make html
           cd ..
           
+      - name: Install rsync
+        run: |
+          choco install rsync
+          
       - name: Deploy documentation to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
