@@ -54,7 +54,7 @@ Not supported:
 - icons
 - images
 - tags
-- links (external and topic links)
+- links
 - rtf
 - floating topics
 - callouts
