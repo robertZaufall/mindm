@@ -14,6 +14,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      pages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,16 +39,17 @@ jobs:
           make html
           cd ..
           
-      - name: Install rsync
-        run: |
-          choco install rsync
-          
-      - name: Deploy documentation to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
         with:
-          folder: docs/_build/html
-          branch: gh-pages
-          clean: true
+          path: 'docs/_build/html'
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
 
       - name: Publish to TestPyPI
         run: twine upload --verbose --repository testpypi dist/*
