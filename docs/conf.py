@@ -8,8 +8,9 @@ sys.path.insert(0, os.path.abspath('..'))
 config = SphinxConfig("../pyproject.toml", globalns=globals())
 
 project = 'mindm'
-version = "0.0.3"
-release = "0.0.3"
+# Version info from pyproject.toml via sphinx_pyproject
+version = config.version
+release = config.version
 author = 'Robert Zaufall'
 copyright = '%Y, Robert Zaufall'
 

@@ -13,4 +13,8 @@ Main components:
 """
 
 # Version information
-__version__ = "0.0.3"
+try:
+    from importlib.metadata import version as _version
+    __version__ = _version("mindm")
+except ImportError:
+    __version__ = "unknown"

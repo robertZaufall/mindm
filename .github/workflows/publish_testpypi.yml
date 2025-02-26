@@ -1,4 +1,4 @@
-name: Publish mindm to TestPyPI
+name: Build, Document, and Publish
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ jobs:
       name: testpypi
       url: https://test.pypi.org/p/mindm
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - name: Checkout repository
@@ -28,15 +28,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install setuptools wheel build twine sphinx sphinx-rtd-theme sphinx-pyproject
 
+      - name: Build the package
+        run: python -m build
+  
       - name: Generate documentation
         run: |
           cd docs
           pip install -e ..
           make html
           cd ..
-
-      - name: Build the package
-        run: python -m build
+          
+      - name: Deploy documentation to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: docs/_build/html
+          clean: true
 
       - name: Publish to TestPyPI
         run: twine upload --verbose --repository testpypi dist/*

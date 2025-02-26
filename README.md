@@ -2,6 +2,8 @@
 
 Python library for interacting with local installed MindManager(tm) on Windows and MacOS platform.
 
+[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://robertzaufall.github.io/mindm/)
+
 ## Installation
 
 Install using `pip`:
