@@ -9,5 +9,4 @@ venv
 .DS_Store
 .idea/
 dist/
-CLAUDE.md
 docs/_build/
