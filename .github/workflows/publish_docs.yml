@@ -2,7 +2,7 @@ name: Deploy Documentation
 
 on:
   workflow_run:
-    workflows: ["Build and Publish"]
+    workflows: ["Build and Publish TestPyPi"]
     types:
       - completed
   workflow_dispatch:
