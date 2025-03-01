@@ -1,0 +1,4 @@
+global-exclude tests/*
+global-exclude .github/workflows/*
+global-exclude .gitignore
+global-exclude MANIFEST.in

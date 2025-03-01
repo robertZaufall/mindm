@@ -9,4 +9,5 @@ venv
 .DS_Store
 .idea/
 dist/
+out/
 docs/_build/
