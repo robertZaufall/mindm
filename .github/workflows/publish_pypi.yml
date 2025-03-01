@@ -9,8 +9,8 @@ jobs:
   build-and-publish:
     runs-on: windows-latest
     environment:
-      name: testpypi
-      url: https://test.pypi.org/p/mindm
+      name: pypi
+      url: https://pypi.org/p/mindm
     permissions:
       contents: read
       id-token: write
@@ -26,27 +26,13 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install setuptools wheel build twine sphinx sphinx-rtd-theme sphinx-pyproject
+          pip install setuptools wheel build twine
 
       - name: Build the package
         run: python -m build
   
-      - name: Generate documentation
-        run: |
-          cd docs
-          pip install -e ..
-          make html
-          cd ..
-
-      - name: Archive documentation
-        uses: actions/upload-artifact@v4
-        with:
-          name: documentation
-          path: docs/_build/html
-          retention-days: 1
-
       - name: Verify package
         run: twine check dist/*
-
-      - name: Publish to TestPyPI
-        run: twine upload --verbose --repository testpypi dist/*
+      
+      - name: Publish to PyPI
+        run: twine upload --verbose --repository pypi dist/*
