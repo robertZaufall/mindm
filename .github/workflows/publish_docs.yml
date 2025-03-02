@@ -45,14 +45,31 @@ jobs:
       - name: Build documentation if needed
         if: steps.download.outcome != 'success'
         run: |
-          pip install sphinx sphinx-pyproject
-          pip install furo --verbose
-          pip list | grep furo
+          # Install all requirements at once
+          pip install sphinx sphinx-pyproject furo
+          # Provide fallback for theme
+          pip install sphinx-rtd-theme
           pip install -e .
+          
+          # Create a temporary conf.py with fallback theme
           cd docs
-          # Show installed Sphinx themes
-          python -c "import sphinx.theming; print('Available themes:', sphinx.theming.BUILTIN_THEMES); import sys; print('Python path:', sys.path)"
+          cp conf.py conf.py.backup
+          python -c "
+          content = open('conf.py', 'r').read()
+          try:
+              import furo
+              print('Furo theme found, using it')
+          except ImportError:
+              print('Furo theme not found, using RTD theme as fallback')
+              content = content.replace(\"html_theme = 'furo'\", \"html_theme = 'sphinx_rtd_theme'\")
+              open('conf.py', 'w').write(content)
+          "
+          
+          # Build docs
           make html
+          
+          # Restore original conf.py
+          mv conf.py.backup conf.py
           cd ..
       
       - name: Setup Pages
