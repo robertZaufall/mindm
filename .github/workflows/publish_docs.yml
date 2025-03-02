@@ -45,22 +45,9 @@ jobs:
       - name: Build documentation if needed
         if: steps.download.outcome != 'success'
         run: |
-          # Install all requirements at once
-          pip install sphinx sphinx-pyproject
-          pip install sphinx-rtd-theme
+          pip install sphinx furo sphinx-pyproject sphinx.ext.autodoc sphinx.ext.napoleon sphinx.ext.autosummary
           pip install -e .
-          
-          # Check if furo is missing and explicitly use RTD theme
           cd docs
-          echo "Checking for furo theme..."
-          if ! pip install furo; then
-            echo "Failed to install furo, using sphinx_rtd_theme instead"
-            # Directly modify conf.py to use RTD theme
-            sed -i "s/html_theme = 'furo'/html_theme = 'sphinx_rtd_theme'/g" conf.py
-            cat conf.py | grep html_theme
-          fi
-          
-          # Build docs
           make html
           cd ..
       
