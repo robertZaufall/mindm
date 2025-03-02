@@ -46,30 +46,22 @@ jobs:
         if: steps.download.outcome != 'success'
         run: |
           # Install all requirements at once
-          pip install sphinx sphinx-pyproject furo
-          # Provide fallback for theme
+          pip install sphinx sphinx-pyproject
           pip install sphinx-rtd-theme
           pip install -e .
           
-          # Create a temporary conf.py with fallback theme
+          # Check if furo is missing and explicitly use RTD theme
           cd docs
-          cp conf.py conf.py.backup
-          python -c "
-          content = open('conf.py', 'r').read()
-          try:
-              import furo
-              print('Furo theme found, using it')
-          except ImportError:
-              print('Furo theme not found, using RTD theme as fallback')
-              content = content.replace(\"html_theme = 'furo'\", \"html_theme = 'sphinx_rtd_theme'\")
-              open('conf.py', 'w').write(content)
-          "
+          echo "Checking for furo theme..."
+          if ! pip install furo; then
+            echo "Failed to install furo, using sphinx_rtd_theme instead"
+            # Directly modify conf.py to use RTD theme
+            sed -i "s/html_theme = 'furo'/html_theme = 'sphinx_rtd_theme'/g" conf.py
+            cat conf.py | grep html_theme
+          fi
           
           # Build docs
           make html
-          
-          # Restore original conf.py
-          mv conf.py.backup conf.py
           cd ..
       
       - name: Setup Pages
