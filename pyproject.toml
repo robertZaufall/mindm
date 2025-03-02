@@ -30,3 +30,14 @@ text = "MIT"
 [project.urls]
 Homepage = "https://github.com/robertZaufall/mindm"
 Issues = "https://github.com/robertZaufall/mindm/issues"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0",
+  "black",
+  "flake8",
+]
+
+[tool.setuptools.packages.find]
+include = ["mindm*"]  # package names should match these glob patterns
+namespaces = false  # to disable scanning PEP 420 namespaces
