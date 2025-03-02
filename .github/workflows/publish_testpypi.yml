@@ -35,7 +35,8 @@ jobs:
         run: |
           cd docs
           pip install -e ..
-          pip install -e ".[docs]"
+          pip install -e "..[docs]"
+          pip install furo 
           make html
           cd ..
 
