@@ -52,11 +52,76 @@ autodoc_default_options = {
 
 autodoc_mock_imports = [
     "win32com",
+    "win32com.client",
     "winreg",
     "appscript",
+    "pythoncom",
+    "pywintypes",
+    "_winreg",  # Alternative name sometimes used
 ]
 
 html_css_files = ['css/custom.css']
 
 def setup(app):
     app.add_css_file('css/custom.css')
+    
+    # Enhanced mocking for Windows modules
+    from unittest.mock import Mock
+    import sys
+    import types
+    
+    # Create a specialized mock that avoids recursion issues
+    class SafeMock(Mock):
+        # Cache to prevent infinite recursion
+        _attribute_cache = {}
+        
+        def __getattr__(self, name):
+            if name in self._attribute_cache:
+                return self._attribute_cache[name]
+            
+            result = SafeMock()
+            self._attribute_cache[name] = result
+            return result
+            
+    # Set up mock objects for all Windows-specific modules
+    MOCK_MODULES = [
+        'win32com', 
+        'win32com.client',
+        'winreg',
+        'pythoncom', 
+        'pywintypes',
+        '_winreg'
+    ]
+    
+    # Create the mocks
+    for mod_name in MOCK_MODULES:
+        parts = mod_name.split('.')
+        
+        # Handle root module
+        if len(parts) == 1:
+            sys.modules[mod_name] = SafeMock()
+        # Handle submodules
+        else:
+            parent_mod_name = ".".join(parts[:-1])
+            child_name = parts[-1]
+            
+            # Ensure parent module exists
+            if parent_mod_name not in sys.modules:
+                # For parent modules, use a simple ModuleType to avoid recursion
+                parent_mod = types.ModuleType(parent_mod_name)
+                sys.modules[parent_mod_name] = parent_mod
+            else:
+                parent_mod = sys.modules[parent_mod_name]
+            
+            # Create child module as a SafeMock
+            child_mod = SafeMock()
+            sys.modules[mod_name] = child_mod
+            
+            # Set child as attribute of parent
+            setattr(parent_mod, child_name, child_mod)
+    
+    # Specific common attributes that might be accessed
+    win32com = sys.modules.get('win32com')
+    if win32com and hasattr(win32com, 'client'):
+        win32com.client.Dispatch = SafeMock()
+        win32com.client.constants = SafeMock()
