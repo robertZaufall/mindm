@@ -21,7 +21,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest  # Ensure this is set correctly
+    runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     steps:
       - name: Checkout
@@ -32,26 +32,11 @@ jobs:
         with:
           name: documentation
           path: docs/_build/html
-        continue-on-error: true
-        id: download
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      # --- CRUCIAL: CHECK THE PLATFORM ---
-      - name: Check Platform
-        run: python -c "import platform; print(platform.system())"
-
-      # Rebuild documentation if the artifact is not available
-      - name: Build documentation if needed
-        if: steps.download.outcome != 'success'
-        run: |
-          pip install -e ".[docs]"  # Correct installation with [docs] extra
-          cd docs
-          make html
-          cd ..
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
