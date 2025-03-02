@@ -23,43 +23,42 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Changed to ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Download documentation artifact
         uses: actions/download-artifact@v4
         with:
           name: documentation
-          path: docs/_build/html
+          path: docs/_build/html  # Keep as is
         continue-on-error: true
-        
+        id: download  # Added ID for checking outcome
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       # Rebuild documentation if the artifact is not available
       - name: Build documentation if needed
         if: steps.download.outcome != 'success'
         run: |
-          pip install -e .
-          pip install sphinx sphinx-pyproject
-          pip install furo
+          pip install -e ".[docs]"
           cd docs
           make html
           cd ..
-      
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
-      
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'docs/_build/html'
-      
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
