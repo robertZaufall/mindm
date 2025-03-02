@@ -45,7 +45,7 @@ jobs:
       - name: Build documentation if needed
         if: steps.download.outcome != 'success'
         run: |
-          pip install sphinx sphinx-rtd-theme sphinx-pyproject
+          pip install sphinx furo sphinx-pyproject
           pip install -e .
           cd docs
           make html
