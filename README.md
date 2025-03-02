@@ -60,25 +60,5 @@ Not Supported:
 - callouts
 - colors, lines, boundaries
 
-## Development
-
-### Installation
-
-```bash
-git clone https://github.com/robertZaufall/mindm
-
-pip install --upgrade build
-python -m build
-
-pip install -e .
-pip install --extra-index-url https://pypi.org/simple mindm
-
-# run tests
-python -m unittest discover tests
-
-# execute example script to clone an open mindmap
-python ./examples/clone_map_by_dom.py
-```
-
-### Documentation
+## Documentation
 [Link to GitHub Pages](https://robertzaufall.github.io/mindm/)
