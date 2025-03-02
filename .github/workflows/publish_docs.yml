@@ -46,9 +46,12 @@ jobs:
         if: steps.download.outcome != 'success'
         run: |
           pip install sphinx sphinx-pyproject
-          pip install furo
+          pip install furo --verbose
+          pip list | grep furo
           pip install -e .
           cd docs
+          # Show installed Sphinx themes
+          python -c "import sphinx.theming; print('Available themes:', sphinx.theming.BUILTIN_THEMES); import sys; print('Python path:', sys.path)"
           make html
           cd ..
       
