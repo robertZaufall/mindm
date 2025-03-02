@@ -45,8 +45,9 @@ jobs:
       - name: Build documentation if needed
         if: steps.download.outcome != 'success'
         run: |
-          pip install sphinx furo sphinx-pyproject sphinx.ext.autodoc sphinx.ext.napoleon sphinx.ext.autosummary
           pip install -e .
+          pip install sphinx sphinx-pyproject
+          pip install furo
           cd docs
           make html
           cd ..

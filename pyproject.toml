@@ -37,6 +37,14 @@ dev = [
   "black",
   "flake8",
 ]
+docs = [
+  "furo",
+  "sphinx",
+  "sphinx-pyproject",
+  "sphinx.ext.autodoc",
+  "sphinx.ext.napoleon",
+  "sphinx.ext.autosummary",
+]
 
 [tool.setuptools.packages.find]
 include = ["mindm*"]  # package names should match these glob patterns
