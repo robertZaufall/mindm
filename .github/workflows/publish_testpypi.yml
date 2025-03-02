@@ -33,10 +33,10 @@ jobs:
   
       - name: Generate documentation
         run: |
-          cd docs
-          pip install -e ..
-          pip install -e "..[docs]"
+          pip install -e .
+          pip install -e ".[docs]"
           pip install furo 
+          cd docs
           make html
           cd ..
 
