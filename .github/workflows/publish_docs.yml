@@ -1,10 +1,10 @@
 name: Deploy Documentation
 
 on:
-  #workflow_run:
-  #  workflows: ["Build and Publish PyPi"]
-  #  types:
-  #    - completed
+  workflow_run:
+    workflows: ["Build and Publish PyPi"]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
