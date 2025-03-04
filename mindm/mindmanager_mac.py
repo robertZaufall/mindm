@@ -186,7 +186,7 @@ class Mindmanager:
         except Exception as e:
             print(f"Error in set_title_to_topic: {e}")
 
-    def add_tag_to_topic(self, topic, tag_text):
+    def add_tag_to_topic(self, topic, tag_text, topic_guid):
         pass
 
     def set_topic_from_mindmap_topic(self, topic, mindmap_topic, map_icons):

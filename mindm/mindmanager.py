@@ -268,7 +268,7 @@ class Mindmanager():
         """
         return self.mindm.set_title_to_topic(topic, topic_rtf)
 
-    def add_tag_to_topic(self, topic: any, tag_text: str) -> None:
+    def add_tag_to_topic(self, topic: any, tag_text: str, topic_guid: str) -> None:
         """
         Add a tag to the specified topic.
 
@@ -279,7 +279,7 @@ class Mindmanager():
         Returns:
             None
         """
-        return self.mindm.add_tag_to_topic(topic, tag_text)
+        return self.mindm.add_tag_to_topic(topic, tag_text, topic_guid)
 
     def set_topic_from_mindmap_topic(self, topic: any, mindmap_topic: any, map_icons: any) -> any:
         """

@@ -535,8 +535,8 @@ class MindmapDocument:
                     self.mindm.add_topic_link(link_from, link_to, DUPLICATE_LABEL)
                     self.mindm.add_topic_link(link_to, link_from, DUPLICATE_LABEL)
                 if len(done_global[mindmap_topic.guid]) == 1:
-                    self.mindm.add_tag_to_topic(DUPLICATED_TAG, topic_guid=done_global[mindmap_topic.guid][0])
-            self.mindm.add_tag_to_topic(DUPLICATED_TAG, topic_guid=topic_guid)
+                    self.mindm.add_tag_to_topic(topic=None, tag_text=DUPLICATED_TAG, topic_guid=done_global[mindmap_topic.guid][0])
+            self.mindm.add_tag_to_topic(topic=None, tag_text=DUPLICATED_TAG, topic_guid=topic_guid)
             done_global[mindmap_topic.guid] = done_global[mindmap_topic.guid] + [topic_guid]
         else:
             done_global[mindmap_topic.guid] = [topic_guid]

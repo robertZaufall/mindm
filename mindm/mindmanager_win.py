@@ -252,7 +252,7 @@ class Mindmanager:
         except Exception as e:
             print(f"Error in set_title_to_topic: {e}")
 
-    def add_tag_to_topic(self, tag_text, topic=None, topic_guid=None):
+    def add_tag_to_topic(self, topic=None, tag_text='', topic_guid=None):
         try:
             if topic_guid:
                 topic = self.get_topic_by_id(topic_guid)
