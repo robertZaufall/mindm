@@ -15,8 +15,9 @@ pip install mindm
 
 Example for loading a mindmap from an open mindmap document and cloning it to a new document:
 ```python
-import mindm.mindmap_helper as mm
+import mindmap.mindmap as mm
 
+# load and clone mindmap to new a document
 document = mm.MindmapDocument()
 if not document.get_mindmap():
     print("No mindmap found.")

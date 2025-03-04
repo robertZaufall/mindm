@@ -9,7 +9,7 @@ properties, relationships, and document structure.
 import os
 from appscript import *
 
-from mindm.mindmap_helper import MindmapLink, MindmapImage, MindmapNotes, MindmapIcon, MindmapTag, MindmapReference
+from mindmap.mindmap import MindmapLink, MindmapImage, MindmapNotes, MindmapIcon, MindmapTag, MindmapReference
 
 class Mindmanager:
 

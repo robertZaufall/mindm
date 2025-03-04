@@ -1,13 +1,13 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-import mindm.mindmap_helper as mh
+import mindmap.mindmap as mh
 
 
 class TestMindmapRelationships(unittest.TestCase):
     """Test relationship handling in MindmapDocument class."""
     
-    @patch('mindm.mindmap_helper.mm.Mindmanager')
+    @patch('mindmap.mindmap.mm.Mindmanager')
     def setUp(self, mock_mindmanager):
         """Set up test fixtures."""
         self.mock_mindmanager = mock_mindmanager

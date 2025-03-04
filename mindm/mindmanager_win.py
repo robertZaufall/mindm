@@ -11,7 +11,7 @@ import win32com.client
 import winreg
 import tempfile
 
-from mindm.mindmap_helper import MindmapLink, MindmapImage, MindmapNotes, MindmapIcon, MindmapTag, MindmapReference
+from mindmap.mindmap import MindmapLink, MindmapImage, MindmapNotes, MindmapIcon, MindmapTag, MindmapReference
 
 class Mindmanager:
 

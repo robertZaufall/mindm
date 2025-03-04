@@ -2,9 +2,9 @@ import sys
 import os
 import yaml
 import re
-import mindm.mindmap_helper as mindm
-from mindm.mindmap_helper import *
-import mindm_serialization.serialization as mms
+import mindmap.mindmap as mindm
+from mindmap.mindmap import *
+import serialization.serialization as mms
 
 import json
 from collections import deque

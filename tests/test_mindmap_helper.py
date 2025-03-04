@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 import uuid
 
-import mindm.mindmap_helper as mh
+import mindmap.mindmap as mh
 
 
 class TestMindmapClasses(unittest.TestCase):
@@ -141,7 +141,7 @@ class TestMindmapClasses(unittest.TestCase):
 class TestMindmapDocument(unittest.TestCase):
     """Test the MindmapDocument class."""
     
-    @patch('mindm.mindmap_helper.mm.Mindmanager')
+    @patch('mindmap.mindmap.mm.Mindmanager')
     def setUp(self, mock_mindmanager):
         """Set up test fixtures."""
         self.mock_mindmanager = mock_mindmanager
@@ -178,7 +178,7 @@ class TestMindmapDocument(unittest.TestCase):
         self.assertIsNone(doc.mindmap)
         
         # Create a new mock and test with it to avoid conflicts with setUp
-        with patch('mindm.mindmap_helper.mm.Mindmanager') as new_mock:
+        with patch('mindmap.mindmap.mm.Mindmanager') as new_mock:
             test_doc = mh.MindmapDocument(charttype="radial")
             new_mock.assert_called_once_with("radial")
         

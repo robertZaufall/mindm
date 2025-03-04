@@ -1,5 +1,5 @@
-from mindm.mindmap_helper import *
-from mindm_serialization import helpers
+from mindmap.mindmap import *
+from serialization import helpers
 
 import json
 import re

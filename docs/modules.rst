@@ -5,5 +5,8 @@ API Reference
    :maxdepth: 4
 
    mindm
-   mindm_serialization
+   mindmap
+   serialization
+   export
+   import
 

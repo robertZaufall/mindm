@@ -1,4 +1,4 @@
-import mindm.mindmap_helper as mm
+import mindmap.mindmap as mm
 
 # load and clone mindmap to new a document
 document = mm.MindmapDocument()
