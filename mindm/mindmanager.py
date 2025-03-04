@@ -9,7 +9,7 @@ appropriate platform-specific implementation.
 import sys
 
 class Mindmanager():
-    def __init__(self, charttype):
+    def __init__(self, charttype='auto'):
         """
         Initialize a Mindmanager instance and delegate to the platform-specific implementation.
 

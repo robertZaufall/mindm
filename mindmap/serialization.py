@@ -197,6 +197,7 @@ def deserialize_mermaid_full(mermaid_text: str, guid_mapping: dict) -> MindmapTo
     pattern = re.compile(r"^( *)(\[.*?\])\s*%%\s*(\{.*\})\s*$")
     root = None
     stack = []
+    
     def restore_guid(numeric_id):
         try:
             num = int(numeric_id)
