@@ -1,10 +1,7 @@
-import sys
 import os
 import yaml
-import re
-import mindmap.mindmap as mindm
-from mindmap.mindmap import *
-import serialization.serialization as mms
+import mindmap.mindmap as mindmap
+import mindmap.serialization as mms
 
 import json
 from collections import deque
@@ -13,7 +10,7 @@ IGNORE_RTF = True
 
 def main():
 
-    document = mindm.MindmapDocument(charttype="auto")
+    document = mindmap.MindmapDocument(charttype="auto")
     document.get_mindmap()
 
     guid_mapping = {}

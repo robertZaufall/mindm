@@ -1,5 +1,5 @@
 from mindmap.mindmap import *
-from serialization import helpers
+from mindmap import helpers
 
 import json
 import re

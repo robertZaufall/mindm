@@ -6,7 +6,3 @@ API Reference
 
    mindm
    mindmap
-   serialization
-   export
-   import
-

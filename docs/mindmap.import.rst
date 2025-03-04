@@ -1,12 +1,12 @@
-import.import module
-====================
+mindmap.import module
+=====================
 
-.. automodule:: import.import
+.. automodule:: mindmap.import
    :members:
    :show-inheritance:
    :undoc-members:
 
-.. literalinclude:: ../import/import.py
+.. literalinclude:: ../mindmap/import.py
    :language: python
    :linenos:
    :caption: Source code for import.py

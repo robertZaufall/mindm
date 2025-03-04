@@ -5,3 +5,7 @@ mindmap package
    :maxdepth: 4
 
    mindmap.mindmap
+   mindmap.serialization
+   mindmap.helpers
+   mindmap.export
+   mindmap.import
