@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "mindm"
 version = "0.0.1.11"
 authors = [
-  { name="Robert Zaufall", email="mail@zaufall.de" },
+  { name="Robert Zaufall" },
 ]
 description = "Python library for interacting with local installed MindManager(tm) on Windows and MacOS platform."
 readme = "README.md"
