@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import json
-from collections import Counter
 
 import mindmap.mindmap as mm
 
@@ -85,7 +84,8 @@ def import_file(file_path):
 
 def main():
     # *********************
-    file_path = 'C://brain'
+    file_path = 'C://brain' # windows style
+    file_path = os.path.join(os.path.expanduser("~"), "Downloads", "brain") # macos style
     # *********************
 
     import_file(file_path)
