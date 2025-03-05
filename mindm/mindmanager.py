@@ -18,12 +18,48 @@ class Mindmanager():
         """
         if sys.platform.startswith('win'):
             import mindm.mindmanager_win as mm
-            platform = "win"
+            self.platform = "win"
         elif sys.platform.startswith('darwin'):
             import mindm.mindmanager_mac as mm
-            platform = "darwin"
+            self.platform = "darwin"
 
         self.mindm = mm.Mindmanager(charttype)
+
+    def get_mindmanager_object(self) -> any:
+        """
+        Retrieve the MindManager application object.
+
+        Returns:
+            any: The MindManager application object.
+        """
+        return self.mindm.get_mindmanager_object()
+    
+    def get_active_document_object(self) -> any:
+        """
+        Retrieve the active document object.
+
+        Returns:
+            any: The active document object.
+        """
+        return self.mindm.get_active_document_object()
+    
+    def get_version(self) -> str:
+        """
+        Retrieve the version of the MindManager application.
+
+        Returns:
+            str: The version of the application.
+        """
+        return self.mindm.get_version()
+
+    def get_library_folder(self) -> str:
+        """
+        Retrieve the library folder path for the MindManager application.
+
+        Returns:
+            str: The library folder path.
+        """
+        return self.mindm.get_library_folder()
 
     def merge_windows(self) -> None:
         """

@@ -202,7 +202,7 @@ class MindmapDocument:
         self.max_topic_level = self.get_max_topic_level(mindmap)
         self.mindmap = mindmap
         return True
-
+    
     def get_max_topic_level(self, mindmap_topic, max_topic_level=0, visited=None):
         """
         Recursively compute the maximum topic level within the mind map.
@@ -702,7 +702,7 @@ class MindmapDocument:
         Returns:
             The path to the library folder.
         """
-        return self.mindm.library_folder
+        return self.mindm.get_library_folder()
     
     def get_grounding_information(self):
         """

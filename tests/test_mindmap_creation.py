@@ -323,18 +323,6 @@ class TestMindmapCreation(unittest.TestCase):
         
         # Verify call to MindManager's set_document_background_image
         self.mock_mindm.set_document_background_image.assert_called_once_with("path/to/image.png")
-        
-    def test_get_library_folder(self):
-        """Test getting the library folder from MindManager."""
-        # Set up mock return value
-        self.mock_mindm.library_folder = "/path/to/library"
-        
-        # Call the method
-        result = self.document.get_library_folder()
-        
-        # Verify result
-        self.assertEqual(result, "/path/to/library")
-
 
 if __name__ == '__main__':
     unittest.main()

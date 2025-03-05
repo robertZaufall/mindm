@@ -17,16 +17,31 @@ class Mindmanager:
     MACOS_LIBRARY_FOLDER = os.path.join(os.path.expanduser("~"), "Library", "Application Support", "Mindjet", "MindManager", "XX", "English", "Library")
 
     def __init__(self, charttype):
-        self.mindmanager = app('MindManager')
-        self.master_window = self.mindmanager.windows[1].id.get()
-        self.charttype = charttype
-        self.library_folder = self.MACOS_LIBRARY_FOLDER.replace("XX", self.mindmanager.version.get().split('.')[0])
-        self.orgchart_template = mactypes.Alias(os.path.join(self.library_folder, "Templates", "Blank Templates", "Org-Chart Map.mmat"))
-        self.radial_template = mactypes.Alias(os.path.join(self.library_folder, "Templates", "Blank Templates", "Radial Map.mmat"))
+        self._mindmanager = app('MindManager')
+        self._version = self._mindmanager.version.get().split('.')[0]
+        self._master_window = self._mindmanager.windows[1].id.get()
+        self._charttype = charttype
+        self._library_folder = self.MACOS_LIBRARY_FOLDER.replace("XX", self._version)
+        self._orgchart_template = mactypes.Alias(os.path.join(self._library_folder, "Templates", "Blank Templates", "Org-Chart Map.mmat"))
+        self._radial_template = mactypes.Alias(os.path.join(self._library_folder, "Templates", "Blank Templates", "Radial Map.mmat"))
+
+    def get_mindmanager_object(self):
+        return self._mindmanager
+        
+    def get_active_document_object(self):
+        if self.document_exists():
+            return self._mindmanager.documents[1]
+        return None
+        
+    def get_library_folder(self):
+        return self._library_folder
+    
+    def get_version(self):
+        return self._version
 
     def merge_windows(self):
-        for window in self.mindmanager.windows():
-            if window.id.get() == self.master_window:
+        for window in self._mindmanager.windows():
+            if window.id.get() == self._master_window:
                 window.activate()
         system_events = app("System Events")
         system_events.processes["MindManager"].menu_bars[1].menu_bar_items["Window"].menus["Window"].menu_items["Merge All Windows"].click()
@@ -36,14 +51,14 @@ class Mindmanager:
     
     def document_exists(self):
         try:
-            return self.mindmanager.documents[1].exists()
+            return self._mindmanager.documents[1].exists()
         except Exception as e:
             print(f"Error checking document existence: {e}")
             return False
 
     def get_central_topic(self):
         try:
-            topic = self.mindmanager.documents[1].central_topic.get()
+            topic = self._mindmanager.documents[1].central_topic.get()
             #callouts = topic.callouts.get()
             #relationships = topic.relationships.get()
             #subtopics = topic.subtopics.get()
@@ -59,7 +74,7 @@ class Mindmanager:
     
     def get_topic_by_id(self, id):
         try:
-            found_topics = self.mindmanager.documents[1].topics[its.id == id]
+            found_topics = self._mindmanager.documents[1].topics[its.id == id]
             if found_topics.count() == 0:
                 return None
             return found_topics[0].get()
@@ -70,7 +85,7 @@ class Mindmanager:
     def get_selection(self):
         selection = []
         try:
-            items = self.mindmanager.documents[1].selection.get()
+            items = self._mindmanager.documents[1].selection.get()
             for item in items:
                 type = item.class_.get()
                 if type.name == 'topic':
@@ -226,22 +241,22 @@ class Mindmanager:
         pass
 
     def add_document(self, max_topic_level):
-        cnt_subtopics = len(self.mindmanager.documents[1].central_topic.subtopics.get())
-        if self.charttype == "orgchart":
-            template_alias = self.orgchart_template
-        if self.charttype == "radial":
-            template_alias = self.radial_template
-        if self.charttype == "auto":
+        cnt_subtopics = len(self._mindmanager.documents[1].central_topic.subtopics.get())
+        if self._charttype == "orgchart":
+            template_alias = self._orgchart_template
+        if self._charttype == "radial":
+            template_alias = self._radial_template
+        if self._charttype == "auto":
             if max_topic_level > 2 and cnt_subtopics > 4:
-                template_alias = self.orgchart_template
+                template_alias = self._orgchart_template
             else:
-                template_alias = self.radial_template
-        self.mindmanager.open(template_alias)
+                template_alias = self._radial_template
+        self._mindmanager.open(template_alias)
 
     def finalize(self, max_topic_level):
-        self.mindmanager.documents[1].balance_map()
-        self.mindmanager.activate()
+        self._mindmanager.documents[1].balance_map()
+        self._mindmanager.activate()
         if self.MACOS_MERGE_ALL_WINDOWS:
             self.merge_windows()
-        self.mindmanager = None
-        del self.mindmanager
+        self._mindmanager = None
+        del self._mindmanager

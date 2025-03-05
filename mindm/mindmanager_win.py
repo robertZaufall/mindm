@@ -34,15 +34,28 @@ class Mindmanager:
         raise Exception("No MindManager version registry keys found.")
 
     def __init__(self, charttype):
-        self.mindmanager = win32com.client.Dispatch("Mindmanager.Application")
-        self.mindmanager.Options.BalanceNewMainTopics = True
-        self.charttype = charttype
-        self.library_folder = self.WINDOWS_LIBRARY_FOLDER
-        self.document = self.mindmanager.ActiveDocument
+        self._version = Mindmanager.get_mindmanager_version()
+        self._mindmanager = win32com.client.Dispatch("Mindmanager.Application")
+        self._mindmanager.Options.BalanceNewMainTopics = True
+        self._charttype = charttype
+        self._library_folder = self.WINDOWS_LIBRARY_FOLDER
+        self._document = self._mindmanager.ActiveDocument
     
+    def get_mindmanager_object(self):
+        return self._mindmanager
+        
+    def get_active_document_object(self):
+        return self._mindmanager.ActiveDocument
+        
+    def get_library_folder(self):
+        return self._library_folder
+
+    def get_version(self):
+        return self._version
+
     def set_document_background_image(self, path):
         try:
-            background = self.document.Background
+            background = self._document.Background
             if background.HasImage:
                 background.RemoveImage()
             background.InsertImage(path)
@@ -53,20 +66,20 @@ class Mindmanager:
 
     def document_exists(self):
         try:
-            return True if self.document else False
+            return True if self._document else False
         except Exception as e:
             print(f"Error checking document existence: {e}")
             return False
 
     def get_central_topic(self):
         try:
-            return self.document.CentralTopic
+            return self._document.CentralTopic
         except Exception as e:
             raise Exception(f"Error getting central topic: {e}")
     
     def get_topic_by_id(self, id):
         try:
-            return self.document.FindByGuid(id)
+            return self._document.FindByGuid(id)
         except Exception as e:
             print(f"Error in get_topic_by_id: {e}")
             return None
@@ -74,13 +87,13 @@ class Mindmanager:
     def get_selection(self):
         selection = []
         try:
-            objs = self.document.Selection
+            objs = self._document.Selection
             for obj in objs:
                 try:
                     class_name = obj._oleobj_.GetTypeInfo().GetDocumentation(-1)[0]
                     if class_name == "ITopic":
                         selection.append(obj)
-                except:
+                except Exception as e:
                     print(f"Error in get_selection, getting class name: {e}")
                     continue
         except Exception as e:
@@ -335,7 +348,7 @@ class Mindmanager:
             if len(map_icons) > 0:
                 icon_groups = set(map_icon.group for map_icon in map_icons if map_icon.group)
                 for icon_group in icon_groups:
-                    group = self.document.MapMarkerGroups.AddIconMarkerGroup(icon_group)
+                    group = self._document.MapMarkerGroups.AddIconMarkerGroup(icon_group)
                     for map_icon in map_icons:
                         if map_icon.group == icon_group:
                             label = map_icon.text
@@ -347,7 +360,7 @@ class Mindmanager:
     def create_tags(self, tags: list['str'], DUPLICATED_TAG: str):
         try:
             if len(tags) > 0:
-                map_marker_group = self.document.MapMarkerGroups.GetMandatoryMarkerGroup(10)
+                map_marker_group = self._document.MapMarkerGroups.GetMandatoryMarkerGroup(10)
                 for tag in tags:
                     map_marker_group.AddTextLabelMarker(tag)
                 if DUPLICATED_TAG != '' and DUPLICATED_TAG not in tags:
@@ -379,30 +392,30 @@ class Mindmanager:
 
     def add_document(self, max_topic_level):
         try:
-            style = self.document.StyleXml
-            new_document = self.mindmanager.Documents.Add()
+            style = self._document.StyleXml
+            new_document = self._mindmanager.Documents.Add()
             new_document.StyleXml = style
-            self.document = new_document
+            self._document = new_document
         except Exception as e:
             print(f"Error in add_document: {e}")
 
     def finalize(self, max_topic_level):
         try:
-            centralTopic = self.document.CentralTopic
+            centralTopic = self._document.CentralTopic
             layout = centralTopic.SubTopicsLayout
             growthDirection = layout.CentralTopicGrowthDirection
             cnt_subtopics = len(centralTopic.AllSubTopics)
                                
             # collapse/uncollapse outer topics
             if max_topic_level > 3:
-                for topic in self.document.Range(2, True):  # 2 = all topics
+                for topic in self._document.Range(2, True):  # 2 = all topics
                     if topic.Level > 2:
                         topic.Collapsed = True
                     else:
                         if topic.Level != 0:
                             topic.Collapsed = False
             else:
-                for topic in self.document.Range(2, True):  # 2 = all topics
+                for topic in self._document.Range(2, True):  # 2 = all topics
                     if topic.Level > 3:
                         topic.Collapsed = True
                     else:
@@ -410,13 +423,13 @@ class Mindmanager:
                             topic.Collapsed = False
                             
             # org chart            
-            if self.charttype == "orgchart" or self.charttype == "auto":
+            if self._charttype == "orgchart" or self._charttype == "auto":
                 if max_topic_level > 2 and cnt_subtopics > 4:
                     if growthDirection == 1:
                         layout.CentralTopicGrowthDirection = 5
                         
             # radial map
-            if self.charttype == "radial" or self.charttype == "auto":
+            if self._charttype == "radial" or self._charttype == "auto":
                 if max_topic_level > 2 and cnt_subtopics < 5:
                     if growthDirection != 1:
                         layout.CentralTopicGrowthDirection = 1
@@ -424,7 +437,7 @@ class Mindmanager:
                     if growthDirection != 1:
                         layout.CentralTopicGrowthDirection = 1
 
-            self.document.Zoom(1)
-            self.mindmanager.Visible = True
+            self._document.Zoom(1)
+            self._mindmanager.Visible = True
         except Exception as e:
             print(f"Error in finalize: {e}")
