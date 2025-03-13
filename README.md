@@ -2,6 +2,7 @@
 
 Python library for interacting with locally installed MindManager™ on Windows and macOS platforms.
 
+[![PyPI version](https://img.shields.io/pypi/v/mindm.svg)](https://pypi.org/project/mindm/)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://robertzaufall.github.io/mindm/)
 
 ## Installation
