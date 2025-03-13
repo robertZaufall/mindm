@@ -54,7 +54,9 @@ def serialize_object(obj, guid_mapping, name='', visited=None, ignore_rtf=True):
                     new_attr_name = "id_2"
                 serialized[new_attr_name] = guid_mapping[attr_value]
             else:
-                serialized[new_attr_name] = serialize_object(attr_value, guid_mapping, attr_name, visited)
+                dict_val = serialize_object(attr_value, guid_mapping, attr_name, visited)
+                if dict_val != {}:
+                    serialized[new_attr_name] = dict_val
         return serialized
     return str(obj)
 
@@ -93,7 +95,9 @@ def serialize_object_simple(obj, name='', visited=None, ignore_rtf=True):
                     continue
             if attr_value is None or attr_value == "" or attr_value == []:
                 continue
-            serialized[attr_name] = serialize_object_simple(attr_value, attr_name, visited)
+            dict_val = serialize_object_simple(attr_value, attr_name, visited)
+            if dict_val != {}:
+                serialized[attr_name] = dict_val
         return serialized
     return str(obj)
 
@@ -110,6 +114,81 @@ def serialize_mindmap(root_topic, guid_mapping, id_only=False):
     """
     lines = ["mindmap"]
 
+    def serialize_topic_attributes(topic, guid_mapping, ignore_rtf=True):
+        """Extract and serialize the attributes of a MindmapTopic.
+        
+        Args:
+            topic (MindmapTopic): The topic to serialize
+            guid_mapping (dict): Dictionary mapping GUIDs to numeric IDs
+            
+        Returns:
+            dict: Dictionary containing serialized topic attributes
+        """
+        d = {}
+        d["id"] = guid_mapping.get(topic.guid, topic.guid)
+        #d["text"] = topic.text
+        if topic.rtf != topic.text and not ignore_rtf == True:
+            d["rtf"] = topic.rtf
+        if topic.selected == True:
+            d["selected"] = topic.selected
+        if topic.links:
+            d["links"] = []
+            for link in topic.links:
+                l = {}
+                if link.text:
+                    l["text"] = link.text
+                if link.url:
+                    l["url"] = link.url
+                if link.guid:
+                    l["id"] = guid_mapping.get(link.guid, link.guid)
+                d["links"].append(l)
+        if topic.image:
+            d["image"] = {"text": topic.image.text}
+        if topic.icons:
+            d["icons"] = []
+            for icon in topic.icons:
+                i = {}
+                if icon.text:
+                    i["text"] = icon.text
+                if icon.is_stock_icon is not None:
+                    i["is_stock_icon"] = icon.is_stock_icon
+                if icon.index is not None:
+                    i["index"] = icon.index
+                if icon.signature:
+                    i["signature"] = icon.signature
+                if icon.path:
+                    i["path"] = icon.path
+                if icon.group:
+                    i["group"] = icon.group
+                d["icons"].append(i)
+        if topic.notes and (topic.notes.text or topic.notes.xhtml or topic.notes.rtf):
+            notes = {}
+            if topic.notes.text:
+                notes["text"] = topic.notes.text
+            if topic.notes.xhtml:
+                notes["xhtml"] = topic.notes.xhtml
+            if topic.notes.rtf:
+                notes["rtf"] = topic.notes.rtf
+            if notes != {}:
+                d["notes"] = notes
+        if topic.tags:
+            d["tags"] = [tag.text for tag in topic.tags]
+        if topic.references:
+            d["references"] = []
+            for ref in topic.references:
+                r = {}
+                if ref.guid_1:
+                    r["id_1"] = guid_mapping.get(ref.guid_1, ref.guid_1)
+                if ref.guid_2:
+                    r["id_2"] = guid_mapping.get(ref.guid_2, ref.guid_2)
+                if ref.direction:
+                    r["direction"] = ref.direction
+                if ref.label:
+                    r["label"] = ref.label
+                d["references"].append(r)
+        d = helpers.replace_unicode_in_obj(d)
+        return d
+    
     def traverse(topic, indent):
         indent_str = "  " * indent
         node_text = helpers.escape_mermaid_text(topic.text)
@@ -120,7 +199,7 @@ def serialize_mindmap(root_topic, guid_mapping, id_only=False):
             #topic_attrs = {"id": id}
         else:
             line = f"{indent_str}[{node_text}]"
-            topic_attrs = helpers.serialize_topic_attributes(topic, guid_mapping, ignore_rtf=IGNORE_RTF)
+            topic_attrs = serialize_topic_attributes(topic, guid_mapping, ignore_rtf=IGNORE_RTF)
             json_comment = json.dumps(topic_attrs, ensure_ascii=True)
             line += f" %% {json_comment}"
         lines.append(line)
