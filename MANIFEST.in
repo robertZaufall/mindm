@@ -3,3 +3,7 @@ global-exclude examples/*
 global-exclude .github/workflows/*
 global-exclude .gitignore
 global-exclude MANIFEST.in
+global-exclude update_version.py
+global-exclude CLAUDE.md
+global-exclude Makefile
+
