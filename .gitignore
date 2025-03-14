@@ -11,4 +11,5 @@ venv
 dist/
 out/
 docs/_build/
+examples/docs/
 ~$Test_DOM.mmap.~$lock

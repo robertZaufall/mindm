@@ -210,6 +210,86 @@ def serialize_mindmap(root_topic, guid_mapping, id_only=False):
     return "\n".join(lines)
 
 
+def serialize_mindmap_markdown(root_topic, include_notes=True):
+    """Serialize a mindmap to markdown including notes (optional).
+    
+    Args:
+        root_topic (MindmapTopic): Root topic of the mindmap
+        include_notes (bool, optional): If True, notes are included
+        
+    Returns:
+        str: Markdown formatted string representing the mindmap
+    """
+
+    import html2text
+    import pypandoc
+
+    lines = []
+    
+    def traverse(topic, lines, level, prefix, index):
+        text = topic.text
+        notes_text = ""
+        notes_xhtml = ""
+        notes_rtf = ""
+
+        if level > 0:
+            if prefix == '':
+                prefix = str(index)
+            else:
+                prefix = f"{prefix}.{index}"
+        
+        if topic.notes and topic.notes.text or topic.notes.xhtml or topic.notes.rtf:
+            if topic.notes.text:
+                notes_text = topic.notes.text
+            if topic.notes.xhtml:
+                xhtml = topic.notes.xhtml
+                root_match = re.search(r'<(?:root|body)[^>]*>(.*?)</(?:root|body)>', xhtml, re.DOTALL | re.IGNORECASE)
+                if root_match:
+                    xhtml = root_match.group(1)
+                xhtml = re.sub(r'<\?xml[^>]*\?>', '', xhtml)
+                xhtml = re.sub(r'<!DOCTYPE[^>]*>', '', xhtml)
+                try:
+                    h = html2text.HTML2Text()
+                    h.ignore_links = False
+                    h.ignore_images = False
+                    h.body_width = 0  # Don't wrap lines
+                    notes_xhtml = h.handle(xhtml).strip()
+                except ImportError:
+                    notes_xhtml = re.sub(r'<[^>]*>', '', xhtml).strip()
+            if topic.notes.rtf:
+                rtf = topic.notes.rtf
+                try:
+                    rtf = pypandoc.convert_text(rtf, to='md', format='rtf')
+                except ImportError:
+                    rtf = re.sub(r'\\[a-z]+\s*', '', rtf)
+                    rtf = rtf.replace('{', '').replace('}', '')
+                notes_rtf = rtf
+
+        if include_notes and (notes_text or notes_xhtml or notes_rtf):
+            notes = f"Notes: {notes_text or notes_xhtml or notes_rtf}  "
+        else:
+            notes = ""
+        
+        if topic.subtopics:
+            line = f"{(level + 1) * '#'} {prefix if level > 0 else ''} {text}  "
+            lines.append(line)
+            if notes:
+                lines.append(notes)
+
+            sub_index = 0
+            for sub in topic.subtopics:
+                sub_index += 1
+                traverse(sub, lines, level + 1, prefix, sub_index)
+        else:
+            line = f"- {text}  "
+            lines.append(line)
+            if notes:
+                lines.append(notes)
+
+    traverse(root_topic, lines, 0, '', 0)
+    return "\n".join(lines)
+
+
 def deserialize_mermaid_with_id(mermaid_text: str, guid_mapping: dict) -> MindmapTopic:
     """Convert Mermaid text with id to a Mindmap structure.
     
