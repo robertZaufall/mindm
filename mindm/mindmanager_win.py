@@ -187,13 +187,14 @@ class Mindmanager:
             notes = topic.Notes
             topic_notes = None
             if notes:
-                if notes.IsValid == True and not notes.IsEmpty: 
+                if notes.IsValid == True and not notes.IsEmpty:
+                    topic_notes = MindmapNotes()
                     if notes.TextRTF != "":
-                        topic_notes = MindmapNotes(rtf=notes.TextRTF)
+                        topic_notes.rtf = notes.TextRTF
                     if notes.TextXHTML != "":
-                        topic_notes = MindmapNotes(xhtml=notes.TextXHTML)
+                        topic_notes.xhtml = notes.TextXHTML
                     if notes.Text != "":
-                        topic_notes = MindmapNotes(text=notes.Text)
+                        topic_notes.text = notes.Text
             return topic_notes
         except Exception as e:
             print(f"Error in get_notes_from_topic: {e}")

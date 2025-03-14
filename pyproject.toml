@@ -21,6 +21,7 @@ dependencies = [
   "pywin32; platform_system == 'Windows'",
   "appscript; sys_platform == 'darwin'",
   "regex",
+  "html2text",
   "markdown"
 ]
 

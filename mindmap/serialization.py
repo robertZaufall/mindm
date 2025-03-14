@@ -4,6 +4,7 @@ from mindmap import helpers
 import json
 import re
 import uuid
+import html2text
 
 IGNORE_RTF = True
 
@@ -221,9 +222,6 @@ def serialize_mindmap_markdown(root_topic, include_notes=True):
         str: Markdown formatted string representing the mindmap
     """
 
-    import html2text
-    import pypandoc
-
     lines = []
     
     def traverse(topic, lines, level, prefix, index):
@@ -238,35 +236,36 @@ def serialize_mindmap_markdown(root_topic, include_notes=True):
             else:
                 prefix = f"{prefix}.{index}"
         
-        if topic.notes and topic.notes.text or topic.notes.xhtml or topic.notes.rtf:
-            if topic.notes.text:
-                notes_text = topic.notes.text
-            if topic.notes.xhtml:
-                xhtml = topic.notes.xhtml
-                root_match = re.search(r'<(?:root|body)[^>]*>(.*?)</(?:root|body)>', xhtml, re.DOTALL | re.IGNORECASE)
-                if root_match:
-                    xhtml = root_match.group(1)
-                xhtml = re.sub(r'<\?xml[^>]*\?>', '', xhtml)
-                xhtml = re.sub(r'<!DOCTYPE[^>]*>', '', xhtml)
-                try:
-                    h = html2text.HTML2Text()
-                    h.ignore_links = False
-                    h.ignore_images = False
-                    h.body_width = 0  # Don't wrap lines
-                    notes_xhtml = h.handle(xhtml).strip()
-                except ImportError:
-                    notes_xhtml = re.sub(r'<[^>]*>', '', xhtml).strip()
-            if topic.notes.rtf:
-                rtf = topic.notes.rtf
-                try:
-                    rtf = pypandoc.convert_text(rtf, to='md', format='rtf')
-                except ImportError:
-                    rtf = re.sub(r'\\[a-z]+\s*', '', rtf)
-                    rtf = rtf.replace('{', '').replace('}', '')
-                notes_rtf = rtf
+        if topic.notes:
+            if topic.notes.text or topic.notes.xhtml or topic.notes.rtf:
+                if topic.notes.text:
+                    notes_text = topic.notes.text
+                if topic.notes.xhtml:
+                    xhtml = topic.notes.xhtml
+                    root_match = re.search(r'<(?:root|body)[^>]*>(.*?)</(?:root|body)>', xhtml, re.DOTALL | re.IGNORECASE)
+                    if root_match:
+                        xhtml = root_match.group(1)
+                    xhtml = re.sub(r'<\?xml[^>]*\?>', '', xhtml)
+                    xhtml = re.sub(r'<!DOCTYPE[^>]*>', '', xhtml)
+                    try:
+                        h = html2text.HTML2Text()
+                        h.ignore_links = False
+                        h.ignore_images = False
+                        h.body_width = 0  # Don't wrap lines
+                        notes_xhtml = h.handle(xhtml).strip()
+                    except ImportError:
+                        notes_xhtml = re.sub(r'<[^>]*>', '', xhtml).strip()
+                if topic.notes.rtf:
+                    # not implemented due to bad results
+                    pass
 
         if include_notes and (notes_text or notes_xhtml or notes_rtf):
-            notes = f"Notes: {notes_text or notes_xhtml or notes_rtf}  "
+            notes_content = notes_text
+            if notes_rtf:
+                notes_content = notes_rtf
+            if notes_xhtml:
+                notes_content = notes_xhtml
+            notes = f"Notes: {notes_content}  "
         else:
             notes = ""
         

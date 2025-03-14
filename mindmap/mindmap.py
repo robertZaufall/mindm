@@ -171,13 +171,14 @@ class MindmapDocument:
 
         self.mindm = mm.Mindmanager(charttype)
 
-    def get_mindmap(self, topic=None):
+    def get_mindmap(self, topic=None, mode='full'):
         """
         Retrieve the mind map structure from the currently open MindManager document.
 
         Args:
             topic: (Optional) A specific topic from which to start building the mindmap.
                    If not provided, the central topic is used.
+            mode (str): The mode to use to gather attributes (full=all attributes, content=text+rtf+notes, text=text only).
 
         Returns:
             bool: True if the mind map was successfully retrieved, otherwise False.
@@ -190,7 +191,7 @@ class MindmapDocument:
             topic = self.mindm.get_central_topic()
         
         # Build the mindmap topic structure from the provided topic
-        mindmap = self.get_mindmap_topic_from_topic(topic)
+        mindmap = self.get_mindmap_topic_from_topic(topic, mode=mode)
 
         # Retrieve the current selection information
         selection = self.get_selection()
@@ -269,13 +270,14 @@ class MindmapDocument:
             mindmap_topics.append(mindmap_topic)
         return mindmap_topics
 
-    def get_mindmap_topic_from_topic(self, topic, parent_topic=None):
+    def get_mindmap_topic_from_topic(self, topic, parent_topic=None, mode='full'):
         """
         Recursively convert a MindManager topic into a MindmapTopic object.
 
         Args:
             topic: The current MindManager topic to convert.
             parent_topic (MindmapTopic): The parent MindmapTopic, if any.
+            mode (str): The mode to use to gather attributes (full=all attributes, content=text+rtf+notes, text=text only).
 
         Returns:
             MindmapTopic: The converted topic with its subtopics.
@@ -285,18 +287,24 @@ class MindmapDocument:
             text=self.mindm.get_text_from_topic(topic),
             rtf=self.mindm.get_title_from_topic(topic),
             level=self.mindm.get_level_from_topic(topic),
-            links=self.mindm.get_links_from_topic(topic),
-            image=self.mindm.get_image_from_topic(topic),
-            icons=self.mindm.get_icons_from_topic(topic),
-            notes=self.mindm.get_notes_from_topic(topic),
-            tags=self.mindm.get_tags_from_topic(topic),
-            references=self.mindm.get_references_from_topic(topic),
-            parent=parent_topic,
+            parent=parent_topic
         )
+
+        if mode == 'full':
+            mindmap_topic.links = self.mindm.get_links_from_topic(topic)
+            mindmap_topic.image = self.mindm.get_image_from_topic(topic)
+            mindmap_topic.icons = self.mindm.get_icons_from_topic(topic)
+            mindmap_topic.notes = self.mindm.get_notes_from_topic(topic)
+            mindmap_topic.tags = self.mindm.get_tags_from_topic(topic)
+            mindmap_topic.references = self.mindm.get_references_from_topic(topic)
+
+        if mode == 'content':
+            mindmap_topic.notes = self.mindm.get_notes_from_topic(topic)
+
         subtopics = self.mindm.get_subtopics_from_topic(topic)
         mindmap_subtopics = []
         for subtopic in subtopics:
-            child = self.get_mindmap_topic_from_topic(subtopic, mindmap_topic)
+            child = self.get_mindmap_topic_from_topic(subtopic, parent_topic=mindmap_topic, mode=mode)
             mindmap_subtopics.append(child)
         mindmap_topic.subtopics = mindmap_subtopics
         return mindmap_topic 

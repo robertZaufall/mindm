@@ -21,11 +21,11 @@ ul{margin-block-start:8px}
 def generate_html(content, guid):
     folder_path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "docs")
     if not os.path.exists(folder_path): os.makedirs(folder_path)
-    with open(os.path.join(folder_path, f"{guid}.md"), 'w') as f:
+    with open(os.path.join(folder_path, f"{guid}.md"), 'w', encoding="utf-8") as f:
         f.write(content)
     html = HTML_TEMPLATE.replace("{{title}}", "Mindmap").replace("{{body}}", markdown.markdown(content).replace("</h2>", "</h2><hr/>"))
     file_path = os.path.join(folder_path, f"{guid}.html")
-    with open(file_path, 'w') as f:
+    with open(file_path, 'w', encoding="utf-8") as f:
         f.write(html)
     if sys.platform.startswith('darwin'):
         os.system(f"open {file_path}")
@@ -34,7 +34,7 @@ def generate_html(content, guid):
         subprocess.Popen(f'cmd /k start explorer.exe "{file_path}"', shell=False)
 
 document = mm.MindmapDocument()
-document.get_mindmap()
+document.get_mindmap(mode='content')
 
 md = mms.serialize_mindmap_markdown(document.mindmap)
 
