@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mindm"
-version = "0.0.3.2"
+version = "0.0.3.8"
 authors = [
   { name="Robert Zaufall" },
 ]
@@ -37,6 +37,7 @@ dev = [
   "pytest>=7.0",
   "black",
   "flake8",
+  "gitingest",
 ]
 docs = [
   "furo",
