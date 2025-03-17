@@ -37,7 +37,8 @@ jobs:
         run: |
           pip install -e .
           pip install -e ".[docs]"
-          pip install furo 
+          pip install furo
+          pip install gitingest
           cd docs
           make html
           cd ..
