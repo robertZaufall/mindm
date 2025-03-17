@@ -11,6 +11,8 @@ BUILDDIR      = _build
 # Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	mkdir -p _build/html
+	gitingest ../. -o _build/html/llms.txt -i "pyproject.toml,update_version.py,LICENSE,README.md,mindm/,mindmap/" -e "mindm/__pycache__,mindmap/__pycache__,mindm/.DS_Store,mindmap/.DS.Store"
 
 .PHONY: help Makefile
 
@@ -18,3 +20,5 @@ help:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	mkdir -p _build/html
+	gitingest ../. -o _build/html/llms.txt -i "pyproject.toml,update_version.py,LICENSE,README.md,mindm/,mindmap/" -e "mindm/__pycache__,mindmap/__pycache__,mindm/.DS_Store,mindmap/.DS.Store"

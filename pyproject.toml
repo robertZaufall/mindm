@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mindm"
-version = "0.0.3.10"
+version = "0.0.3.24"
 authors = [
   { name="Robert Zaufall" },
 ]
@@ -46,6 +46,7 @@ docs = [
   "sphinx.ext.autodoc",
   "sphinx.ext.napoleon",
   "sphinx.ext.autosummary",
+  "gitingest",
 ]
 
 [tool.setuptools.packages.find]
