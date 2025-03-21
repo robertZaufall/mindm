@@ -168,7 +168,6 @@ class MindmapDocument:
         self.selected_topic_levels: list[int] = []
         self.selected_topic_ids: list[str] = []
         self.max_topic_level: int = 0
-
         self.mindm = mm.Mindmanager(charttype)
 
     def get_mindmap(self, topic=None, mode='full'):
@@ -190,16 +189,11 @@ class MindmapDocument:
         if topic is None:
             topic = self.mindm.get_central_topic()
         
-        # Build the mindmap topic structure from the provided topic
-        mindmap = self.get_mindmap_topic_from_topic(topic, mode=mode)
+        if len(topic.subtopics) > 0:
+            mindmap = topic
+        else:
+            mindmap = self.get_mindmap_topic_from_topic(self.mindm.get_topic_by_id(topic.guid), mode=mode)
 
-        # Retrieve the current selection information
-        selection = self.get_selection()
-        selected_topic_texts, selected_topic_levels, selected_topic_ids, central_topic_selected = self.get_topic_texts_from_selection(selection)
-        self.central_topic_selected = central_topic_selected
-        self.selected_topic_texts = selected_topic_texts
-        self.selected_topic_levels = selected_topic_levels
-        self.selected_topic_ids = selected_topic_ids
         self.max_topic_level = self.get_max_topic_level(mindmap)
         self.mindmap = mindmap
         return True
@@ -268,6 +262,7 @@ class MindmapDocument:
                 selected=True,
             )
             mindmap_topics.append(mindmap_topic)
+        self.get_topic_texts_from_selection(mindmap_topics)
         return mindmap_topics
 
     def get_mindmap_topic_from_topic(self, topic, parent_topic=None, mode='full'):
@@ -282,24 +277,13 @@ class MindmapDocument:
         Returns:
             MindmapTopic: The converted topic with its subtopics.
         """
-        mindmap_topic = MindmapTopic(
-            guid=self.mindm.get_guid_from_topic(topic),
-            text=self.mindm.get_text_from_topic(topic),
-            rtf=self.mindm.get_title_from_topic(topic),
-            level=self.mindm.get_level_from_topic(topic),
-            parent=parent_topic
-        )
-
         if mode == 'full':
-            mindmap_topic.links = self.mindm.get_links_from_topic(topic)
-            mindmap_topic.image = self.mindm.get_image_from_topic(topic)
-            mindmap_topic.icons = self.mindm.get_icons_from_topic(topic)
-            mindmap_topic.notes = self.mindm.get_notes_from_topic(topic)
-            mindmap_topic.tags = self.mindm.get_tags_from_topic(topic)
-            mindmap_topic.references = self.mindm.get_references_from_topic(topic)
-
-        if mode == 'content':
-            mindmap_topic.notes = self.mindm.get_notes_from_topic(topic)
+            mindmap_topic = self.mindm.get_mindmaptopic_from_topic_full(topic)
+            mindmap_topic.parent = parent_topic
+        elif mode == 'content':
+            mindmap_topic = self.mindm.get_mindmaptopic_from_topic_content(topic)
+        else:
+            mindmap_topic = self.mindm.get_mindmaptopic_from_topic(topic)
 
         subtopics = self.mindm.get_subtopics_from_topic(topic)
         mindmap_subtopics = []
@@ -468,9 +452,6 @@ class MindmapDocument:
 
         Args:
             mindmap_topics (list[MindmapTopic]): List of topics to process.
-
-        Returns:
-            tuple: (list of topic texts, list of topic levels, list of topic GUIDs, bool indicating if the central topic is selected)
         """
         topic_texts = []
         topic_levels = []
@@ -484,7 +465,11 @@ class MindmapDocument:
                     topic_ids.append(topic.guid)
                 else:
                     central_topic_selected = True
-        return topic_texts, topic_levels, topic_ids, central_topic_selected
+
+        self.central_topic_selected = central_topic_selected
+        self.selected_topic_texts = topic_texts
+        self.selected_topic_levels = topic_levels
+        self.selected_topic_ids = topic_ids
             
     def clone_mindmap_topic(self, mindmap_topic, subtopics: list['MindmapTopic'] = None, parent=None):
         """
@@ -656,12 +641,17 @@ class MindmapDocument:
         self.mindm.add_document(0)
         self.mindm.create_map_icons(map_icons)
         self.mindm.create_tags(tags, DUPLICATED_TAG)
-        self.mindm.set_text_to_topic(self.mindm.get_central_topic(), self.mindmap.text)
 
-        topic = self.mindm.get_central_topic()
+        central_topic = self.mindm.get_central_topic()
+        self.mindm.set_text_to_topic(self.mindm.get_topic_by_id(central_topic.guid), self.mindmap.text)
 
         done_global = {}
-        self.set_topic_from_mindmap_topic(topic=topic, mindmap_topic=self.mindmap, map_icons=map_icons, done={}, done_global=done_global)
+        self.set_topic_from_mindmap_topic(
+            topic=self.mindm.get_topic_by_id(central_topic.guid),
+            mindmap_topic=self.mindmap,
+            map_icons=map_icons,
+            done={},
+            done_global=done_global)
 
         # Create relationships between topics
         for reference in relationships:

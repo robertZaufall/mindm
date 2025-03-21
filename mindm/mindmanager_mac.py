@@ -9,7 +9,7 @@ properties, relationships, and document structure.
 import os
 from appscript import *
 
-from mindmap.mindmap import MindmapLink, MindmapImage, MindmapNotes, MindmapIcon, MindmapTag, MindmapReference
+from mindmap.mindmap import MindmapLink, MindmapImage, MindmapNotes, MindmapIcon, MindmapTag, MindmapReference, MindmapTopic
 
 class Mindmanager:
 
@@ -39,13 +39,6 @@ class Mindmanager:
     def get_version(self):
         return self._version
 
-    def merge_windows(self):
-        for window in self._mindmanager.windows():
-            if window.id.get() == self._master_window:
-                window.activate()
-        system_events = app("System Events")
-        system_events.processes["MindManager"].menu_bars[1].menu_bar_items["Window"].menus["Window"].menu_items["Merge All Windows"].click()
-
     def set_document_background_image(self, path):
         pass
     
@@ -56,7 +49,7 @@ class Mindmanager:
             print(f"Error checking document existence: {e}")
             return False
 
-    def get_central_topic(self):
+    def get_central_topic(self) -> 'MindmapTopic':
         try:
             topic = self._mindmanager.documents[1].central_topic.get()
             #callouts = topic.callouts.get()
@@ -67,11 +60,51 @@ class Mindmanager:
             #props = topic.properties.get()
             #task = topic.task.get()
             #task_properties = task.properties.get()
-            return topic
+            mindmap_topic = MindmapTopic(
+                guid=self.get_guid_from_topic(topic),
+                text=self.get_text_from_topic(topic),
+                rtf=self.get_title_from_topic(topic),
+                level=self.get_level_from_topic(topic),
+            )
+            return mindmap_topic
         except Exception as e:
             print(f"Error getting central topic: {e}")
             return None
     
+    def get_mindmaptopic_from_topic(self, topic) -> 'MindmapTopic':
+        mindmap_topic = MindmapTopic(
+            guid=self.get_guid_from_topic(topic),
+            text=self.get_text_from_topic(topic),
+            rtf=self.get_title_from_topic(topic),
+            level=self.get_level_from_topic(topic),
+        )
+        return mindmap_topic
+    
+    def get_mindmaptopic_from_topic_content(self, topic) -> 'MindmapTopic':
+        mindmap_topic = MindmapTopic(
+            guid=self.get_guid_from_topic(topic),
+            text=self.get_text_from_topic(topic),
+            rtf=self.get_title_from_topic(topic),
+            level=self.get_level_from_topic(topic),
+            notes=self.get_notes_from_topic(topic),
+        )
+        return mindmap_topic
+    
+    def get_mindmaptopic_from_topic_full(self, topic) -> 'MindmapTopic':
+        mindmap_topic = MindmapTopic(
+            guid=self.get_guid_from_topic(topic),
+            text=self.get_text_from_topic(topic),
+            rtf=self.get_title_from_topic(topic),
+            level=self.get_level_from_topic(topic),
+            notes=self.get_notes_from_topic(topic),
+            links=self.get_links_from_topic(topic),
+            image=self.get_image_from_topic(topic),
+            icons=self.get_icons_from_topic(topic),
+            tags=self.get_tags_from_topic(topic),
+            references=self.get_references_from_topic(topic),
+        )
+        return mindmap_topic
+        
     def get_topic_by_id(self, id):
         try:
             found_topics = self._mindmanager.documents[1].topics[its.id == id]

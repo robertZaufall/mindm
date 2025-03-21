@@ -61,15 +61,6 @@ class Mindmanager():
         """
         return self.mindm.get_library_folder()
 
-    def merge_windows(self) -> None:
-        """
-        Merge multiple windows into a single window.
-
-        Returns:
-            None
-        """
-        return self.mindm.merge_windows()
-
     def set_document_background_image(self, path: str) -> None:
         """
         Set the background image for the document.
@@ -99,6 +90,33 @@ class Mindmanager():
             any: The central topic.
         """
         return self.mindm.get_central_topic()
+
+    def get_mindmaptopic_from_topic(self, topic) -> any:
+        """
+        Retrieve the topic properties of the topic.
+
+        Returns:
+            any: A mindmap topic
+        """
+        return self.mindm.get_mindmaptopic_from_topic(topic)
+
+    def get_mindmaptopic_from_topic_content(self, topic) -> any:
+        """
+        Retrieve the topic properties of the topic including notes.
+
+        Returns:
+            any: A mindmap topic
+        """
+        return self.mindm.get_mindmaptopic_from_topic_content(topic)
+
+    def get_mindmaptopic_from_topic_full(self, topic) -> any:
+        """
+        Retrieve the full set of topic properties of the topic.
+
+        Returns:
+            any: The mindmap topic.
+        """
+        return self.mindm.get_mindmaptopic_from_topic_full(topic)
 
     def get_topic_by_id(self, id: any) -> any:
         """

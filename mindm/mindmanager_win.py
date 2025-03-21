@@ -11,7 +11,7 @@ import win32com.client
 import winreg
 import tempfile
 
-from mindmap.mindmap import MindmapLink, MindmapImage, MindmapNotes, MindmapIcon, MindmapTag, MindmapReference
+from mindmap.mindmap import MindmapLink, MindmapImage, MindmapNotes, MindmapIcon, MindmapTag, MindmapReference, MindmapTopic
 
 class Mindmanager:
 
@@ -71,11 +71,35 @@ class Mindmanager:
             print(f"Error checking document existence: {e}")
             return False
 
-    def get_central_topic(self):
+    def get_central_topic(self) -> 'MindmapTopic':
         try:
-            return self._document.CentralTopic
+            topic = self._document.CentralTopic
+            return self.get_mindmaptopic_from_topic(topic)
         except Exception as e:
             raise Exception(f"Error getting central topic: {e}")
+        
+    def get_mindmaptopic_from_topic(self, topic) -> 'MindmapTopic':
+        mindmap_topic = MindmapTopic()
+        mindmap_topic.guid=self.get_guid_from_topic(topic)
+        mindmap_topic.text=self.get_text_from_topic(topic)
+        mindmap_topic.rtf=self.get_title_from_topic(topic)
+        mindmap_topic.level=self.get_level_from_topic(topic)
+        return mindmap_topic
+    
+    def get_mindmaptopic_from_topic_content(self, topic) -> 'MindmapTopic':
+        mindmap_topic = self.get_mindmaptopic_from_topic(topic)
+        mindmap_topic.notes = self.get_notes_from_topic(topic)
+        return mindmap_topic
+    
+    def get_mindmaptopic_from_topic_full(self, topic) -> 'MindmapTopic':
+        mindmap_topic = self.get_mindmaptopic_from_topic(topic)
+        mindmap_topic.notes = self.get_notes_from_topic(topic)
+        mindmap_topic.links = self.get_links_from_topic(topic)
+        mindmap_topic.image = self.get_image_from_topic(topic)
+        mindmap_topic.icons = self.get_icons_from_topic(topic)
+        mindmap_topic.tags = self.get_tags_from_topic(topic)
+        mindmap_topic.references = self.get_references_from_topic(topic)
+        return mindmap_topic
     
     def get_topic_by_id(self, id):
         try:
