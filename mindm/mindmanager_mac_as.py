@@ -1,5 +1,6 @@
 """
 MacOS-specific implementation of the Mindmanager interface.
+This class implementation uses the native AppleScript approach.
 
 This module provides MacOS platform-specific implementation for interacting
 with MindManager application, including functionality for manipulating topics,
