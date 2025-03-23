@@ -1,7 +1,7 @@
 .PHONY: clean build update-version docs
 
 # Default target
-all: clean update-version build install docs
+all: clean update-version build install llms docs
 
 # Clean the dist folder
 clean:
@@ -18,6 +18,12 @@ build:
 # Install the package
 install:
 	pip install -e ".[dev]"
+
+# llms
+# Generate documentation
+llms:
+	pip install gitingest
+	gitingest . -o llms.txt -i "pyproject.toml,update_version.py,LICENSE,README.md,mindm/*,mindmap/*" -e "llms.txt,mindm/__pycache__,mindmap/__pycache__,mindm/.DS_Store,mindmap/.DS.Store"
 
 # Generate documentation
 docs:
