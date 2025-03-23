@@ -148,7 +148,7 @@ class MindmapTopic:
 
 
 class MindmapDocument:
-    def __init__(self, charttype: str = 'auto', turbo_mode: bool = False, inline_editing_mode: bool = False, mermaid_mode: bool = True):
+    def __init__(self, charttype: str = 'auto', turbo_mode: bool = False, inline_editing_mode: bool = False, mermaid_mode: bool = True, macos_access: str = 'appscript'):
         """
         Initialize a MindmapDocument instance which automates MindManager operations.
 
@@ -157,18 +157,20 @@ class MindmapDocument:
             turbo_mode (bool): Flag for enabling turbo mode -> use only text.
             inline_editing_mode (bool): Flag for enabling inline editing mode.
             mermaid_mode (bool): Flag for enabling mermaid mode.
+            macos_access (str): Method for accessing macOS features (default is 'appscript', alternative is 'applescript').
         """
         self.charttype: str = charttype
         self.turbo_mode: bool = turbo_mode
         self.inline_editing_mode: bool = inline_editing_mode
         self.mermaid_mode: bool = mermaid_mode
+        self.macos_access: str = macos_access
         self.mindmap: 'MindmapTopic' = None
         self.central_topic_selected: bool = False
         self.selected_topic_texts: list[str] = []
         self.selected_topic_levels: list[int] = []
         self.selected_topic_ids: list[str] = []
         self.max_topic_level: int = 0
-        self.mindm = mm.Mindmanager(charttype)
+        self.mindm = mm.Mindmanager(charttype, macos_access)
 
     def get_mindmap(self, topic=None, mode='full'):
         """

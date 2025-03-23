@@ -9,18 +9,22 @@ appropriate platform-specific implementation.
 import sys
 
 class Mindmanager():
-    def __init__(self, charttype='auto'):
+    def __init__(self, charttype='auto', macos_access='appscript'):
         """
         Initialize a Mindmanager instance and delegate to the platform-specific implementation.
 
         Args:
             charttype (any): The type of chart to initialize with.
+            macos_access (str): Method for accessing macOS features (default is 'appscript', alternative is 'applescript').
         """
         if sys.platform.startswith('win'):
             import mindm.mindmanager_win as mm
             self.platform = "win"
         elif sys.platform.startswith('darwin'):
-            import mindm.mindmanager_mac as mm
+            if macos_access == 'applescript':
+                import mindm.mindmanager_mac_as as mm # AppleScript
+            else:
+                import mindm.mindmanager_mac as mm # Appscript
             self.platform = "darwin"
 
         self.mindm = mm.Mindmanager(charttype)
