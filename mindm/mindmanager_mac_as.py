@@ -109,11 +109,15 @@ on buildTree(aTopic)
         end tell
     end tell
     
-    try
-        set tNotes to notes of aTopic as text
-    on error
-        set tNotes to ""
-    end try
+	set tNotes to ""
+	tell application "MindManager"
+		try
+			set tNotesObj to notes of aTopic
+			set tNotes to tNotesObj as rich text
+		on error
+			set tNotes to ""
+		end try
+	end tell
     
     set tID to my escapeJSON(tID)
     set tName to my escapeJSON(tName)

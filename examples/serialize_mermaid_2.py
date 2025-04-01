@@ -2,7 +2,7 @@ import mindmap.mindmap as mm
 import mindmap.serialization as mms
 import json
 
-document = mm.MindmapDocument()
+document = mm.MindmapDocument(macos_access="applescript")
 document.get_mindmap()
 
 guid_mapping = {}
