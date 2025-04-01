@@ -17,7 +17,7 @@ class Mindmanager:
 
     @staticmethod
     def get_mindmanager_version():
-        versions = ["26", "25", "24", "23"]
+        versions = ["26", "25", "24", "23", "22", "21", "20"]
         for version in versions:
             try:
                 key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, f"Software\\Mindjet\\MindManager\\{version}\\AddIns")
