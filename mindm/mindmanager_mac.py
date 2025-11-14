@@ -22,7 +22,11 @@ class Mindmanager:
         self._master_window = self._mindmanager.windows[1].id.get()
         self._charttype = charttype
         self._library_folder = self.MACOS_LIBRARY_FOLDER.replace("XX", self._version)
-        self._orgchart_template = mactypes.Alias(os.path.join(self._library_folder, "Templates", "Blank Templates", "Org-Chart Map.mmat"))
+        if self._version != '24':
+            orgchart_template_path = os.path.join(self._library_folder, "Templates", "Blank Templates", "Org-Chart Map.mmat")
+        else:
+            orgchart_template_path = os.path.join(self._library_folder, "Templates", "Blank Templates", "Organization Chart.mmat")
+        self._orgchart_template = mactypes.Alias(orgchart_template_path)
         self._radial_template = mactypes.Alias(os.path.join(self._library_folder, "Templates", "Blank Templates", "Radial Map.mmat"))
 
     def get_mindmanager_object(self):

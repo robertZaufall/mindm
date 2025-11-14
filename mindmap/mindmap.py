@@ -170,6 +170,7 @@ class MindmapDocument:
         self.selected_topic_levels: list[int] = []
         self.selected_topic_ids: list[str] = []
         self.max_topic_level: int = 0
+        self.macos_access = macos_access
         self.mindm = mm.Mindmanager(charttype, macos_access)
 
     def get_mindmap(self, topic=None, mode='full'):
@@ -184,16 +185,13 @@ class MindmapDocument:
         Returns:
             bool: True if the mind map was successfully retrieved, otherwise False.
         """
-        if not self.mindm.document_exists():
-            print("No document found. Please open MindManager with a document.")    
-            return False
-
-        if topic is None:
-            topic = self.mindm.get_central_topic()
-        
-        if len(topic.subtopics) > 0:
-            mindmap = topic
+        if self.macos_access == 'applescript':
+            # get whole mindmap
+            mindmap = self.mindm.get_central_topic()
         else:
+            if topic is None:
+                topic = self.mindm.get_central_topic()
+            
             mindmap = self.get_mindmap_topic_from_topic(self.mindm.get_topic_by_id(topic.guid), mode=mode)
 
         self.max_topic_level = self.get_max_topic_level(mindmap)
@@ -644,16 +642,20 @@ class MindmapDocument:
         self.mindm.create_map_icons(map_icons)
         self.mindm.create_tags(tags, DUPLICATED_TAG)
 
-        central_topic = self.mindm.get_central_topic()
-        self.mindm.set_text_to_topic(self.mindm.get_topic_by_id(central_topic.guid), self.mindmap.text)
+        if self.mindm.platform == 'darwin' and self.macos_access == 'applescript':
+            self.mindm.set_topic_from_mindmap_topic(None, self.mindmap, map_icons)
+            self.get_mindmap()
+        else:
+            central_topic = self.mindm.get_central_topic()
+            self.mindm.set_text_to_topic(self.mindm.get_topic_by_id(central_topic.guid), self.mindmap.text)
 
-        done_global = {}
-        self.set_topic_from_mindmap_topic(
-            topic=self.mindm.get_topic_by_id(central_topic.guid),
-            mindmap_topic=self.mindmap,
-            map_icons=map_icons,
-            done={},
-            done_global=done_global)
+            done_global = {}
+            self.set_topic_from_mindmap_topic(
+                topic=self.mindm.get_topic_by_id(central_topic.guid),
+                mindmap_topic=self.mindmap,
+                map_icons=map_icons,
+                done={},
+                done_global=done_global)
 
         # Create relationships between topics
         for reference in relationships:
@@ -713,6 +715,7 @@ class MindmapDocument:
                    of non-selected topics, and subtopics is a comma-separated string of selected subtopics.
         """
         central_topic_text = self.mindmap.text
+        self.get_selection()
         subtopics = ""
         if len(self.selected_topic_texts) == 0: 
             top_most_topic = central_topic_text
