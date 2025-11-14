@@ -30,6 +30,17 @@ docs:
 	cd docs && make clean html
 	cd ..
 
+# Create a release on Github
+release:
+	@if [ -z "$$VERSION" ]; then \
+		echo "Error: VERSION is required. Use 'make release VERSION=x.x.x'"; \
+		exit 1; \
+	fi
+	@echo "Creating release v$$VERSION..."
+	git tag -a v$$VERSION -m "Release v$$VERSION"
+	git push origin v$$VERSION
+	@echo "\nRelease v$$VERSION created."
+
 # Help
 help:
 	@echo "Available targets:"
@@ -37,5 +48,8 @@ help:
 	@echo "  clean          - Remove contents of dist folder"
 	@echo "  update-version - Increment build number in pyproject.toml"
 	@echo "  build          - Build the package with python -m build"
+	@echo "  install        - Install the package in editable mode"
+	@echo "  llms           - Generate llms documentation"
 	@echo "  docs           - Generate HTML documentation with clean option"
+	@echo "  release        - Create a release on GitHub"
 	@echo "  help           - Show this help message"

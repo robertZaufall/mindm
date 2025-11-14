@@ -103,6 +103,39 @@ Example for serializing / deserializing a mindmap to / from Mermaid format inclu
    document_new.mindmap = deserialized
    document_new.create_mindmap()
 
+Example for serializing / deserializing a simplified Mermaid mindmap (text and indentation only):
+
+.. code-block:: python
+
+   import mindmap.mindmap as mm
+   import mindmap.serialization as mms
+
+   document = mm.MindmapDocument()
+   document.get_mindmap()
+
+   simple_mermaid = mms.serialize_mindmap_simple(document.mindmap)
+   print(simple_mermaid)
+
+   simple_root = mms.deserialize_mermaid_simple(simple_mermaid)
+
+Example for deserializing a simplified Mermaid mindmap (text and indentation only):
+
+.. code-block:: python
+
+   import mindmap.serialization as mms
+
+   mermaid = """
+   mindmap
+     Creating an AI startup
+       Vision & Strategy
+         Mission and Value
+           Problem statement
+           Value proposition
+           Long term goals
+   """
+
+   mindmap_root = mms.deserialize_mermaid_simple(mermaid)
+
 Platform Specific Functionality
 -------------------------------
 
@@ -145,4 +178,3 @@ Not supported:
 * floating topics
 * callouts
 * colors, lines, boundaries
-
