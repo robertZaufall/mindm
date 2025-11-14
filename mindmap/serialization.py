@@ -210,6 +210,26 @@ def serialize_mindmap(root_topic, guid_mapping, id_only=False):
     traverse(root_topic, 1)
     return "\n".join(lines)
 
+def serialize_mindmap_simple(root_topic: MindmapTopic) -> str:
+    """Serialize a mindmap to a simplified Mermaid format with indentation-only nodes.
+    
+    Args:
+        root_topic (MindmapTopic): Root topic of the mindmap
+        
+    Returns:
+        str: Mermaid formatted string (text and indentation only)
+    """
+    lines = ["mindmap"]
+
+    def traverse(topic, indent):
+        indent_str = "  " * indent
+        text = topic.text if topic.text is not None else ""
+        lines.append(f"{indent_str}{text}")
+        for sub in topic.subtopics:
+            traverse(sub, indent + 1)
+
+    traverse(root_topic, 1)
+    return "\n".join(lines)
 
 def serialize_mindmap_markdown(root_topic, include_notes=True):
     """Serialize a mindmap to markdown including notes (optional).
@@ -335,6 +355,51 @@ def deserialize_mermaid_with_id(mermaid_text: str, guid_mapping: dict) -> Mindma
         else:
             root.subtopics.append(node)
             node.parent = root
+        stack.append((level, node))
+    return root
+
+def deserialize_mermaid_simple(mermaid_text: str) -> MindmapTopic:
+    """Convert a simple indentation-based Mermaid mindmap to a Mindmap structure.
+    
+    Args:
+        mermaid_text (str): Mermaid formatted string containing only textual nodes
+            expressed via indentation (no IDs or metadata)
+        
+    Returns:
+        MindmapTopic: Root topic of the deserialized mindmap
+    """
+    lines = [line for line in mermaid_text.splitlines() if line.strip()]
+    if lines and lines[0].strip().lower() == "mindmap":
+        lines = lines[1:]
+    root = None
+    stack = []
+    for raw_line in lines:
+        # Allow optional inline comments and convert tabs to spaces for consistent indentation
+        line = raw_line.expandtabs(2)
+        line = line.split("%%", 1)[0]
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("[") and stripped.endswith("]"):
+            stripped = stripped[1:-1]
+        indent = len(line) - len(line.lstrip(" "))
+        level = indent // 2
+        node = MindmapTopic(guid=str(uuid.uuid4()), text=stripped, level=level)
+        if root is None:
+            root = node
+            stack = [(level, node)]
+            continue
+        while stack and stack[-1][0] >= level:
+            stack.pop()
+        if stack:
+            parent = stack[-1][1]
+            node.parent = parent
+            parent.subtopics.append(node)
+        else:
+            # Fallback for malformed inputs that contain multiple root-level nodes
+            if root:
+                node.parent = root
+                root.subtopics.append(node)
         stack.append((level, node))
     return root
 
