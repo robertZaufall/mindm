@@ -185,7 +185,7 @@ class MindmapDocument:
         Returns:
             bool: True if the mind map was successfully retrieved, otherwise False.
         """
-        if self.macos_access == 'applescript':
+        if self.macos_access == 'applescript' and self.mindm.platform == 'darwin':
             # get whole mindmap
             mindmap = self.mindm.get_central_topic()
         else:
