@@ -2,8 +2,10 @@ global-exclude tests/*
 global-exclude examples/*
 global-exclude .github/workflows/*
 global-exclude .gitignore
+global-exclude .vscode/*
 global-exclude MANIFEST.in
 global-exclude update_version.py
-global-exclude CLAUDE.md
+global-exclude AGENTS.md
 global-exclude Makefile
 global-exclude llms.txt
+recursive-include mindm/as *.scpt
