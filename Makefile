@@ -20,7 +20,6 @@ install:
 	pip install -e ".[dev]"
 
 # llms
-# Generate documentation
 llms:
 	pip install gitingest
 	gitingest . -o llms.txt -i "pyproject.toml,LICENSE,README.md,mindm/*,mindmap/*,examples/*" -e "llms.txt,update_version.py,examples/docs,examples/Test_DOM.*,mindm/__pycache__,mindmap/__pycache__,mindm/.DS_Store,mindmap/.DS.Store,mindm/as/*.scpt"
