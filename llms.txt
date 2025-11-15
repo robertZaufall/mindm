@@ -3,7 +3,25 @@ Directory structure:
     ├── README.md
     ├── LICENSE
     ├── pyproject.toml
-    ├── update_version.py
+    ├── examples/
+    │   ├── brain_import.py
+    │   ├── clone_map.py
+    │   ├── deserialize_mermaid.py
+    │   ├── deserialize_mermaid_simple.py
+    │   ├── get_selection.py
+    │   ├── infrastructure.py
+    │   ├── serialize_deserialize_mermaid.py
+    │   ├── serialize_json_1.py
+    │   ├── serialize_json_2.py
+    │   ├── serialize_markdown.py
+    │   ├── serialize_markmap.py
+    │   ├── serialize_mermaid_1.py
+    │   ├── serialize_mermaid_2.py
+    │   ├── serialize_mermaid_simple.py
+    │   ├── serialize_yaml.py
+    │   ├── test.py
+    │   ├── uppercase.py
+    │   └── .DS_Store
     ├── mindm/
     │   ├── __init__.py
     │   ├── mindmanager.py
@@ -12,9 +30,7 @@ Directory structure:
     │   ├── mindmanager_win.py
     │   └── as/
     │       ├── read.applescript
-    │       ├── read.scpt
-    │       ├── write.applescript
-    │       └── write.scpt
+    │       └── write.applescript
     └── mindmap/
         ├── __init__.py
         ├── export.py
@@ -294,32 +310,533 @@ mindm = ["as/*.scpt"]
 
 
 ================================================
-File: update_version.py
+File: examples/brain_import.py
 ================================================
 #!/usr/bin/env python3
-import re
+import os
+import json
 
-# Read pyproject.toml
-with open("pyproject.toml", "r") as f:
-    content = f.read()
+import mindmap.mindmap as mm
 
-# Find version and update build number
-version_pattern = r'version = "([\d]+)\.([\d]+)\.([\d]+)\.([\d]+)"'
-version_match = re.search(version_pattern, content)
+def get_generic(file_path):
+    records = []
+    with open(file_path, 'r', encoding='utf-8-sig') as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                records.append(json.loads(line))
+    return records
 
-if version_match:
-    major, minor, patch, build = version_match.groups()
-    new_build = str(int(build) + 1)
-    new_version = f"{major}.{minor}.{patch}.{new_build}"
-    new_content = re.sub(version_pattern, f'version = "{new_version}"', content)
+def get_mindmap_from_brain(thoughts, links, attachments, file_path):
+    id_to_tag_topic = {}
+    for thought in thoughts:
+        kind = thought.get('Kind')
+        if kind == 4:
+            id_to_tag_topic[thought['Id']] = thought['Name']
+
+    thought_id_to_tag_links = {}
+    for thought in thoughts:
+        thought_tag_links = []
+        for link in links:
+            if link['ThoughtIdB'] == thought['Id'] and link['ThoughtIdA'] in id_to_tag_topic:
+                thought_tag_links.append(link['ThoughtIdA'])
+        if len(thought_tag_links) > 0:
+            thought_id_to_tag_links[thought['Id']] = thought_tag_links
+
+    id_to_topic = {}
+    for thought in thoughts:
+        kind = thought.get('Kind')
+        if kind in [3, 4, 5]:
+            continue
+        thought_id = thought.get('Id')
+        tags = []
+        if thought_id in thought_id_to_tag_links:
+            for tag_id in thought_id_to_tag_links[thought_id]:
+                tag_name = id_to_tag_topic[tag_id]
+                tags.append(mm.MindmapTag(text=tag_name))
+        topic = mm.MindmapTopic(guid=thought['Id'], text=thought.get('Name', ''), level=0, tags=tags)
+        id_to_topic[thought['Id']] = topic
     
-    # Write updated content back
-    with open("pyproject.toml", "w") as f:
-        f.write(new_content)
+    child_ids = set()
+    for link in links:
+        direction = link.get('Direction', 0)
+        meaning = link.get('Meaning', '')
+        kind = link.get('Kind', '')
+        relation = link.get('Relation', '')
+        parent_id = link['ThoughtIdA']
+        child_id = link['ThoughtIdB']
+        if direction == -1 and meaning in [1] and relation in [1] and kind in [1]:
+            if parent_id in id_to_topic and child_id in id_to_topic:
+                parent_topic = id_to_topic[parent_id]
+                child_topic = id_to_topic[child_id]
+                child_topic.topic_parent = parent_topic
+                parent_topic.subtopics.append(child_topic)
+                child_ids.add(child_id)
     
-    print(f"Updated version to {new_version}")
-else:
-    print("Version pattern not found in pyproject.toml")
+    root_topics = [t for t_id, t in id_to_topic.items() if t_id not in child_ids]
+    central_topic = mm.MindmapTopic(guid='central_brain_topic', text='Brain', level=0)
+    num_root_topics_with_subtopics = sum(1 for root in root_topics if len(root.subtopics) > 1)
+    if num_root_topics_with_subtopics == 1:
+        for root in root_topics:
+            if len(root.subtopics) > 0:
+                central_topic = root
+    else:
+        for root in root_topics:
+            if len(root.subtopics) > 0:
+                root.topic_parent = central_topic
+                central_topic.subtopics.append(root)
+    return central_topic
+
+def import_file(file_path):
+    thoughts = get_generic(os.path.join(file_path, "thoughts.json"))
+    links = get_generic(os.path.join(file_path, "links.json"))
+    attachments = get_generic(os.path.join(file_path, "attachments.json"))
+
+    document = mm.MindmapDocument()
+    document.mindmap = get_mindmap_from_brain(thoughts, links, attachments, file_path)
+    document.create_mindmap()
+
+def main():
+    # *********************
+    file_path = 'C://brain' # windows style
+    file_path = os.path.join(os.path.expanduser("~"), "Downloads", "brain") # macos style
+    # *********************
+
+    import_file(file_path)
+
+if __name__ == "__main__":
+    try:
+        main()
+        print("Done.")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+
+
+================================================
+File: examples/clone_map.py
+================================================
+import mindmap.mindmap as mm
+
+document = mm.MindmapDocument(turbo_mode=True, macos_access='applescript')
+document.get_mindmap(mode="content")
+document.create_mindmap()
+
+
+
+================================================
+File: examples/deserialize_mermaid.py
+================================================
+import json
+import mindmap.mindmap as mm
+import mindmap.serialization as mms
+
+# irrelevant for windows
+macos_access = "applescript"
+#macos_access = "appscript"
+
+mermaid = """
+mindmap
+  [Creating an AI startup] %% {"id": 1}
+    [Vision & Strategy] %% {"id": 2}
+      [Mission and Value] %% {"id": 3}
+        [Problem statement] %% {"id": 4}
+        [Value proposition] %% {"id": 5}
+        [Long term goals] %% {"id": 6}
+      [Competitive Positioning] %% {"id": 7}
+        [Differentiation pillars] %% {"id": 8}
+        [Key competitors map] %% {"id": 9}
+        [Barrier strategies] %% {"id": 10}
+    [Product & Tech] %% {"id": 19}
+      [MVP Design] %% {"id": 20}
+        [Core feature set] %% {"id": 21}
+        [User flows map] %% {"id": 22}
+        [Rapid prototyping] %% {"id": 23}
+"""
+
+guid_mapping = {}
+deserialized = mms.deserialize_mermaid_full(mermaid, guid_mapping)
+print(json.dumps(mms.serialize_object_simple(deserialized), indent=1))
+document_new = mm.MindmapDocument(macos_access=macos_access)
+document_new.mindmap = deserialized
+document_new.create_mindmap()
+
+print("Done")
+
+
+
+================================================
+File: examples/deserialize_mermaid_simple.py
+================================================
+import json
+import mindmap.mindmap as mm
+import mindmap.serialization as mms
+
+# irrelevant for windows
+macos_access = "applescript"
+#macos_access = "appscript"
+
+mermaid = """
+mindmap
+  Creating an AI startup
+    Vision & Strategy
+      Mission and Value
+        Problem statement
+        Value proposition
+        Long term goals
+      Competitive Positioning
+        Differentiation pillars
+        Key competitors map
+        Barrier strategies
+    Product & Tech
+      MVP Design
+        Core feature set
+        User flows map
+        Rapid prototyping
+"""
+
+document = mm.MindmapDocument(macos_access=macos_access)
+deserialized = mms.deserialize_mermaid_simple(mermaid)
+print(json.dumps(mms.serialize_object_simple(deserialized), indent=1))
+document_new = mm.MindmapDocument(macos_access=macos_access)
+document_new.mindmap = deserialized
+document_new.create_mindmap()
+
+print("Done")
+
+
+
+================================================
+File: examples/get_selection.py
+================================================
+import mindm.mindmanager as mm
+import mindmap.serialization as mms
+import json
+
+m = mm.Mindmanager(macos_access="applescript")
+#m = mm.Mindmanager(macos_access="appscript")
+selection = m.get_selection()
+for topic in selection:
+    print(json.dumps(mms.serialize_object_simple(topic)))
+
+
+
+================================================
+File: examples/infrastructure.py
+================================================
+import mindmap.mindmap as mmap
+import mindm.mindmanager as mm
+
+document = mmap.MindmapDocument()
+library_path = document.get_library_folder()
+print(f"Library path: {library_path}")
+
+mindmanager = mm.Mindmanager()
+version = mindmanager.get_version()
+print(f"Version: {version}")
+platform = mindmanager.platform
+print(f"Platform: {platform}")
+
+mindmanager_object = mindmanager.get_mindmanager_object()
+document_object = mindmanager.get_active_document_object()
+
+print("Done.")
+
+
+
+================================================
+File: examples/serialize_deserialize_mermaid.py
+================================================
+import json
+import mindmap.mindmap as mm
+import mindmap.serialization as mms
+
+# irrelevant for windows
+macos_access = "applescript"
+#macos_access = "appscript"
+
+document = mm.MindmapDocument(macos_access=macos_access)
+document.get_mindmap()
+
+guid_mapping = {}
+mms.build_mapping(document.mindmap, guid_mapping)
+
+serialized = mms.serialize_mindmap(document.mindmap, guid_mapping, id_only=False)
+print(serialized)
+
+deserialized = mms.deserialize_mermaid_full(serialized, guid_mapping)
+print(json.dumps(mms.serialize_object_simple(deserialized), indent=1))
+
+document_new = mm.MindmapDocument(macos_access=macos_access)
+document_new.mindmap = deserialized
+document_new.create_mindmap()
+
+print("Done")
+
+
+
+================================================
+File: examples/serialize_json_1.py
+================================================
+import json
+import mindmap.mindmap as mm
+import mindmap.serialization as mms
+
+document = mm.MindmapDocument()
+document.get_mindmap()
+
+serialize_simple_result = mms.serialize_object_simple(document.mindmap)
+print(json.dumps(serialize_simple_result, indent=1))
+
+
+
+================================================
+File: examples/serialize_json_2.py
+================================================
+import json
+import mindmap.mindmap as mm
+import mindmap.serialization as mms
+
+document = mm.MindmapDocument()
+document.get_mindmap()
+
+guid_mapping = {}
+mms.build_mapping(document.mindmap, guid_mapping)
+
+serialize_result = mms.serialize_object(document.mindmap, guid_mapping)
+print(json.dumps(serialize_result, indent=1))
+
+
+
+================================================
+File: examples/serialize_markdown.py
+================================================
+import mindmap.mindmap as mm
+import mindmap.serialization as mms
+
+import os
+import sys
+import uuid
+import markdown
+
+HTML_TEMPLATE = """
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />  
+<title>{{title}}</title><style>
+body{font-family:Helvetica,Arial,sans-serif;} 
+h2{margin-block-start:0;margin-block-end:0} 
+hr{margin-block-start:0;margin-block-end:0}
+ul{margin-block-start:8px}
+</style></head><body>
+{{body}}
+</body></html>
+"""
+
+def generate_html(content, guid):
+    folder_path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "docs")
+    if not os.path.exists(folder_path): os.makedirs(folder_path)
+    with open(os.path.join(folder_path, f"{guid}.md"), 'w', encoding="utf-8") as f:
+        f.write(content)
+    html = HTML_TEMPLATE.replace("{{title}}", "Mindmap").replace("{{body}}", markdown.markdown(content).replace("</h2>", "</h2><hr/>"))
+    file_path = os.path.join(folder_path, f"{guid}.html")
+    with open(file_path, 'w', encoding="utf-8") as f:
+        f.write(html)
+    if sys.platform.startswith('darwin'):
+        os.system(f"open {file_path}")
+    elif sys.platform.startswith('win'):
+        import subprocess
+        subprocess.Popen(f'cmd /k start explorer.exe "{file_path}"', shell=False)
+
+document = mm.MindmapDocument()
+document.get_mindmap(mode='content')
+
+md = mms.serialize_mindmap_markdown(document.mindmap)
+
+guid = uuid.uuid4()
+generate_html(md, guid)
+
+
+================================================
+File: examples/serialize_markmap.py
+================================================
+import mindmap.mindmap as mm
+import mindmap.serialization as mms
+
+import os
+import sys
+import uuid
+import markdown
+
+MARKMAP_TEMPLATE = """
+<div class="markmap">
+<script type="text/template">
+---
+markmap:
+colorFreezeLevel: {{colorFreezeLevel}}
+initialExpandLevel: -1
+---
+{{markmap}}
+</script>
+</div>
+"""
+
+HTML_TEMPLATE = """
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{{title}}</title>
+<style>
+svg.markmap{width:100%;height:100vh;}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@latest"></script>
+</head><body>
+{{body}}
+</body></html>
+"""
+
+def generate_html(content, guid):
+    folder_path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "docs")
+    if not os.path.exists(folder_path): os.makedirs(folder_path)
+    this_content = MARKMAP_TEMPLATE.replace("{{colorFreezeLevel}}", "3").replace("{{markmap}}", content)
+    template = HTML_TEMPLATE
+    html = template.replace("{{body}}", this_content).replace("{{title}}", "Markmap")
+    file_path = os.path.join(folder_path, f"{guid}.html")
+    with open(file_path, 'w', encoding="utf-8") as f:
+        f.write(html)
+    if sys.platform.startswith('darwin'):
+        os.system(f"open {file_path}")
+    elif sys.platform.startswith('win'):
+        import subprocess
+        subprocess.Popen(f'cmd /k start explorer.exe "{file_path}"', shell=False)
+
+document = mm.MindmapDocument()
+document.get_mindmap(mode='content')
+
+md = mms.serialize_mindmap_markdown(document.mindmap, include_notes=False)
+
+guid = uuid.uuid4()
+generate_html(md, guid)
+
+
+================================================
+File: examples/serialize_mermaid_1.py
+================================================
+import mindmap.mindmap as mm
+import mindmap.serialization as mms
+import json
+
+document = mm.MindmapDocument()
+document.get_mindmap()
+
+guid_mapping = {}
+mms.build_mapping(document.mindmap, guid_mapping)
+
+mermaid_id_only = mms.serialize_mindmap(document.mindmap, guid_mapping, id_only=True)
+print(mermaid_id_only)
+
+#deserialized = mms.deserialize_mermaid_with_id(mermaid_id_only, guid_mapping)
+#print(json.dumps(mms.serialize_object_simple(deserialized), indent=1))
+
+
+
+================================================
+File: examples/serialize_mermaid_2.py
+================================================
+import mindmap.mindmap as mm
+import mindmap.serialization as mms
+import json
+
+document = mm.MindmapDocument(macos_access="applescript")
+document.get_mindmap()
+
+guid_mapping = {}
+mms.build_mapping(document.mindmap, guid_mapping)
+
+mermaid_data = mms.serialize_mindmap(document.mindmap, guid_mapping, id_only=False)
+print(mermaid_data)
+
+#deserialized = mms.deserialize_mermaid_full(mermaid_data, guid_mapping)
+#print(json.dumps(mms.serialize_object_simple(deserialized), indent=1))
+
+
+
+================================================
+File: examples/serialize_mermaid_simple.py
+================================================
+import mindmap.mindmap as mm
+import mindmap.serialization as mms
+import json
+
+# irrelevant for windows
+macos_access = "applescript"
+#macos_access = "appscript"
+
+document = mm.MindmapDocument(macos_access=macos_access)
+document.get_mindmap()
+
+mermaid = mms.serialize_mindmap_simple(document.mindmap)
+print(mermaid)
+
+
+
+================================================
+File: examples/serialize_yaml.py
+================================================
+import yaml
+import mindmap.mindmap as mm
+import mindmap.serialization as mms
+
+document = mm.MindmapDocument()
+document.get_mindmap()
+
+guid_mapping = {}
+mms.build_mapping(document.mindmap, guid_mapping)
+
+yaml_data = mms.serialize_object(document.mindmap, guid_mapping)
+print(yaml.dump(yaml_data, sort_keys=False))
+
+
+
+================================================
+File: examples/test.py
+================================================
+import mindm.mindmanager as mm
+
+mindmanager = mm.Mindmanager()
+version = mindmanager.get_version()
+print(f"Version: {version}")
+platform = mindmanager.platform
+print(f"Platform: {platform}")
+
+mindmanager_object = mindmanager.get_mindmanager_object()
+document_object = mindmanager.get_active_document_object()
+
+print("Done.")
+
+
+
+================================================
+File: examples/uppercase.py
+================================================
+import mindm.mindmanager
+
+def iterate_topics(topic):
+    text = m.get_text_from_topic(topic)
+    m.set_text_to_topic(topic, text.upper())
+
+    subtopics = m.get_subtopics_from_topic(topic)
+    for subtopic in subtopics:
+        iterate_topics(subtopic)
+
+m = mindm.mindmanager.Mindmanager()
+central_topic = m.get_central_topic()
+iterate_topics(central_topic)
+
+
+
+================================================
+File: examples/.DS_Store
+================================================
+[Non-text file]
 
 
 ================================================
@@ -2796,12 +3313,6 @@ end escapeJSON
 
 
 ================================================
-File: mindm/as/read.scpt
-================================================
-[Non-text file]
-
-
-================================================
 File: mindm/as/write.applescript
 ================================================
 use framework "Foundation"
@@ -3215,12 +3726,6 @@ on escapeJSON(txt)
 	end try
 end escapeJSON
 
-
-
-================================================
-File: mindm/as/write.scpt
-================================================
-[Non-text file]
 
 
 ================================================
