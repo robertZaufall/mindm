@@ -447,7 +447,19 @@ def deserialize_mermaid_full(mermaid_text: str, guid_mapping: dict) -> MindmapTo
         fallback_text = bracket_part.strip()[1:-1]
         try:
             attrs = json.loads(json_part)
+        except json.JSONDecodeError as e:
+            if "Invalid \\escape" in e.msg:
+                repaired_json = re.sub(r'(?<!\\)\\(?![\\\"/bfnrtu])', r'\\\\', json_part)
+                try:
+                    attrs = json.loads(repaired_json)
+                except Exception as inner:
+                    print(f"Failed to parse Mermaid JSON metadata even after repairing backslashes: {inner} (original: {json_part!r})")
+                    attrs = {}
+            else:
+                print(f"Failed to parse Mermaid JSON metadata: {e.msg} at pos {e.pos} in {json_part!r}")
+                attrs = {}
         except Exception as e:
+            print(f"Unexpected error while parsing Mermaid JSON metadata {json_part!r}: {e}")
             attrs = {}
         if "id" in attrs:
             node_guid = restore_guid(attrs["id"])

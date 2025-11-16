@@ -20,9 +20,10 @@ mindmap
         [Barrier strategies] %% {"id": 10}
     [Product & Tech] %% {"id": 19}
       [MVP Design] %% {"id": 20}
-        [Core feature set] %% {"id": 21, "notes": {"text": "Notes"}}
-        [User flows map] %% {"id": 22}
-        [Rapid prototyping] %% {"id": 23}
+        [Core feature set] %% {"id": 21, "notes": {"text": "Some Notes"}, "icons": [{"type": "star"}]}
+        [User flows map] %% {"id": 22, "links": [{"text": "label", "url": "https://example.com"}]}
+        [Rapid prototyping] %% {"id": 23, "references": [{"id_1": 23, "id_2": 6, "direction": 1}]}
+        [Topic] %% {"id": 24, "notes": {"text": "Notes"}, "references": [{"id_1": 24, "id_2": 5, "direction": 1}], "links": [{"text": "label", "url": "https://example.com"}], "image": {"text": "C:\\path\\to\\image.png"}, "icons": [{"text": "StockIcon-36", "is_stock_icon": true, "index": 36}], "tags": ["tag1"]}
 """
 
 guid_mapping = {}
