@@ -87,21 +87,21 @@ on doWriteTree(jsonData)
 			-- Create new document or clear existing one
 			if (count of documents) > 0 then
 				tell document 1
-					set name of central topic to topicText of parsedData
-					if topicNotes of parsedData is not "" then
-						set notes of central topic to topicNotes of parsedData
-					end if
+						set name of central topic to topicText of parsedData
+						if topicNotes of parsedData is not "" then
+							set notes of central topic to (topicNotes of parsedData as Unicode text)
+						end if
 					-- Remove existing subtopics
 					delete every subtopic of central topic
 				end tell
 			else
 				make new document
-				tell document 1
-					set name of central topic to topicText of parsedData
-					if topicNotes of parsedData is not "" then
-						set notes of central topic to topicNotes of parsedData
-					end if
-				end tell
+					tell document 1
+						set name of central topic to topicText of parsedData
+						if topicNotes of parsedData is not "" then
+							set notes of central topic to (topicNotes of parsedData as Unicode text)
+						end if
+					end tell
 			end if
 			
 			-- Build the tree structure recursively
@@ -139,10 +139,10 @@ on doWriteFragment(jsonData)
 				
 				-- Create the fragment as a subtopic
 				set newSubtopic to make new subtopic at end of subtopics of targetTopic
-				set name of newSubtopic to topicText of parsedData
-				if topicNotes of parsedData is not "" then
-					set notes of newSubtopic to topicNotes of parsedData
-				end if
+					set name of newSubtopic to topicText of parsedData
+					if topicNotes of parsedData is not "" then
+						set notes of newSubtopic to (topicNotes of parsedData as Unicode text)
+					end if
 				
 				-- Build subtopics recursively
 				set result to my buildTreeFromJSON(newSubtopic, topicSubtopics of parsedData)
@@ -183,7 +183,7 @@ on doSetProperties(jsonData)
 					set name to topicText of parsedData
 				end if
 				if topicNotes of parsedData is not "" then
-					set notes to topicNotes of parsedData
+					set notes to (topicNotes of parsedData as Unicode text)
 				end if
 			end tell
 		end tell
@@ -215,10 +215,10 @@ on buildTreeFromJSON(parentTopic, subtopicsData)
 			tell application "MindManager"
 				tell parentTopic
 					set newSubtopic to make new subtopic at end of subtopics
-					set name of newSubtopic to topicText of parsedSubtopic
-					if topicNotes of parsedSubtopic is not "" then
-						set notes of newSubtopic to topicNotes of parsedSubtopic
-					end if
+						set name of newSubtopic to topicText of parsedSubtopic
+						if topicNotes of parsedSubtopic is not "" then
+							set notes of newSubtopic to (topicNotes of parsedSubtopic as Unicode text)
+						end if
 				end tell
 			end tell
 			
@@ -271,7 +271,20 @@ end parseTopicJSON
 on _dictionaryToTopicRecord(topicDict)
 	set topicGuid to my _coerceToText((topicDict's objectForKey_("guid")))
 	set topicText to my _coerceToText((topicDict's objectForKey_("text")))
-	set topicNotes to my _coerceToText((topicDict's objectForKey_("notes")))
+	
+	-- notes can be either a plain string or an object with a "text" field; normalize to plain text
+	set rawNotes to (topicDict's objectForKey_("notes"))
+	set topicNotes to ""
+	if rawNotes is not missing value then
+		try
+			if ((rawNotes's isKindOfClass:NSString) as boolean) is true then
+				set topicNotes to my _coerceToText(rawNotes)
+			else if ((rawNotes's isKindOfClass:NSDictionary) as boolean) is true then
+				set nestedNote to (rawNotes's objectForKey_("text"))
+				set topicNotes to my _coerceToText(nestedNote)
+			end if
+		end try
+	end if
 	
 	set rawLevel to (topicDict's objectForKey_("level"))
 	set topicLevel to 0

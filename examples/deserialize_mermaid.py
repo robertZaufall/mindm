@@ -20,7 +20,7 @@ mindmap
         [Barrier strategies] %% {"id": 10}
     [Product & Tech] %% {"id": 19}
       [MVP Design] %% {"id": 20}
-        [Core feature set] %% {"id": 21}
+        [Core feature set] %% {"id": 21, "notes": {"text": "Notes"}}
         [User flows map] %% {"id": 22}
         [Rapid prototyping] %% {"id": 23}
 """
@@ -31,5 +31,8 @@ print(json.dumps(mms.serialize_object_simple(deserialized), indent=1))
 document_new = mm.MindmapDocument(macos_access=macos_access)
 document_new.mindmap = deserialized
 document_new.create_mindmap()
+
+serialized = mms.serialize_mindmap(document_new.mindmap, guid_mapping, id_only=False)
+print(serialized)
 
 print("Done")
