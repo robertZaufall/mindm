@@ -144,11 +144,37 @@ class Mindmanager:
         notes_obj = None
         if node_dict.get("notes"):
             notes_obj = MindmapNotes(text=node_dict["notes"])
+        references = []
+        for ref in node_dict.get("references", []) or []:
+            if not isinstance(ref, dict):
+                continue
+            direction = 0
+            try:
+                direction = int(ref.get("direction", 0) or 0)
+            except (TypeError, ValueError):
+                direction = 0
+            references.append(
+                MindmapReference(
+                    direction=direction,
+                    guid_1=ref.get("guid_1", ""),
+                    guid_2=ref.get("guid_2", ""),
+                )
+            )
+        tags = []
+        for tag in node_dict.get("tags", []) or []:
+            if isinstance(tag, dict):
+                text_val = tag.get("text", "")
+            else:
+                text_val = tag
+            if text_val:
+                tags.append(MindmapTag(text=text_val))
         topic = MindmapTopic(
             guid=node_dict.get("guid", ""),
             text=node_dict.get("text", ""),
             level=int(node_dict.get("level", 0)),
             notes=notes_obj,
+            tags=tags,
+            references=references,
         )
         subtopics = node_dict.get("subtopics", [])
         for child_dict in subtopics:

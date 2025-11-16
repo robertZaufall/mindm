@@ -126,9 +126,19 @@ on doGetSingleProperties(topicID as string)
 		set escapedID to my escapeJSON(topicID)
 		set escapedName to my escapeJSON(propName of propertiesRecord)
 		set escapedNotes to my escapeJSON(propNotes of propertiesRecord)
-		set propLevel to propLevel of propertiesRecord
+			set propLevel to propLevel of propertiesRecord
+			
+			set refsJSONs to my _get_relationships_json(theTopic, topicID)
+		set oldTID to AppleScript's text item delimiters
+		set AppleScript's text item delimiters to ","
+		if refsJSONs is missing value or (count of refsJSONs) is 0 then
+			set refsJoined to ""
+		else
+			set refsJoined to refsJSONs as text
+		end if
+		set AppleScript's text item delimiters to oldTID
 		
-		return "{\"guid\":\"" & escapedID & "\", \"text\":\"" & escapedName & "\", \"level\":" & propLevel & ", \"notes\":\"" & escapedNotes & "\"}"
+			return "{\"guid\":\"" & escapedID & "\", \"text\":\"" & escapedName & "\", \"level\":" & propLevel & ", \"notes\":\"" & escapedNotes & "\", \"references\":[" & refsJoined & "]}"
 	on error errMsg number errNum
 		return "{ \"guid\":\"" & my escapeJSON(topicID) & "\", \"error\": \"Unexpected error in doGetSingleProperties: " & my escapeJSON(errMsg) & " (Code: " & errNum & ")\" }"
 	end try
@@ -178,8 +188,14 @@ on doGetListProperties(topicIDList as list)
 						set escapedID to my escapeJSON(currentTopicID_str)
 						set escapedName to my escapeJSON(propName of propertiesRecord)
 						set escapedNotes to my escapeJSON(propNotes of propertiesRecord)
-						set propLevel to propLevel of propertiesRecord
-						set jsonObject to "{\"guid\":\"" & escapedID & "\", \"text\":\"" & escapedName & "\", \"level\":" & propLevel & ", \"notes\":\"" & escapedNotes & "\"}"
+							set propLevel to propLevel of propertiesRecord
+							set refsJSONs to my _get_relationships_json(theTopic, currentTopicID_str)
+						if refsJSONs is missing value or (count of refsJSONs) is 0 then
+							set refsJoined to ""
+						else
+							set refsJoined to refsJSONs as text
+						end if
+							set jsonObject to "{\"guid\":\"" & escapedID & "\", \"text\":\"" & escapedName & "\", \"level\":" & propLevel & ", \"notes\":\"" & escapedNotes & "\", \"references\":[" & refsJoined & "]}"
 						set end of resultsList to jsonObject
 					end if
 				on error errMsg number errNum
@@ -218,7 +234,7 @@ end doGetListProperties
 
 
 on _buildTreeRecursive(aTopic)
-	local topicID, propertiesRecord, tID_escaped, tName_escaped, tLevel, tNotes_escaped, childJSONs, childTopicObjects, childTopic, jsonText, oldTID, idErr, childErr
+	local topicID, propertiesRecord, tID_escaped, tName_escaped, tLevel, tNotes_escaped, childJSONs, childTopicObjects, childTopic, jsonText, oldTID, idErr, childErr, refsJSONs, refsJoined, refsDelims
 	
 	set topicID to missing value
 	try
@@ -257,9 +273,19 @@ on _buildTreeRecursive(aTopic)
 		set childJSONs to {"{ \"error\": \"Could not retrieve subtopics for topic " & tID_escaped & "\" }"}
 	end if
 	
+	set refsJSONs to my _get_relationships_json(aTopic, topicID)
+	set refsDelims to AppleScript's text item delimiters
+	set AppleScript's text item delimiters to ","
+	if refsJSONs is missing value or (count of refsJSONs) is 0 then
+		set refsJoined to ""
+	else
+		set refsJoined to refsJSONs as text
+	end if
+	set AppleScript's text item delimiters to refsDelims
+	
 	set oldTID to AppleScript's text item delimiters
 	set AppleScript's text item delimiters to ","
-	set jsonText to "{\"guid\":\"" & tID_escaped & "\", \"text\":\"" & tName_escaped & "\", \"level\":" & tLevel & ", \"notes\":\"" & tNotes_escaped & "\", \"subtopics\":[" & (childJSONs as text) & "]}"
+	set jsonText to "{\"guid\":\"" & tID_escaped & "\", \"text\":\"" & tName_escaped & "\", \"level\":" & tLevel & ", \"notes\":\"" & tNotes_escaped & "\", \"references\":[" & refsJoined & "], \"subtopics\":[" & (childJSONs as text) & "]}"
 	set AppleScript's text item delimiters to oldTID
 	
 	return jsonText
@@ -301,6 +327,7 @@ on _get_topic_properties_record(theTopic, topicIDForError)
 				set errorMsg to errorMsg & "Failed to get notes. "
 				log "Warning (_get_topic_properties_record): Could not get notes for topic " & topicIDForError & ": " & (notesErr as rich text) & " (" & (number of notesErr) & ")"
 			end try
+			
 		end tell
 		
 		if errorStatus then
@@ -341,6 +368,39 @@ on _get_subtopics_objects(parentTopic, parentIDForLog)
 		return missing value
 	end try
 end _get_subtopics_objects
+
+
+on _get_relationships_json(theTopic, topicIDForLog)
+	try
+		if theTopic is missing value then return {}
+		tell application "MindManager"
+			set rels to relationships of theTopic
+			if rels is missing value then return {}
+			if (count of rels) is 0 then return {}
+				set refJSONs to {}
+				repeat with r in rels
+					set sLoc to ""
+					set eLoc to ""
+					try
+						set sLoc to id of (starting location of r)
+					end try
+					try
+						set eLoc to id of (ending location of r)
+					end try
+					if sLoc is not "" and eLoc is not "" then
+						-- Only serialize from the perspective of the starting topic to avoid duplicate reverse edges
+						if sLoc is topicIDForLog then
+							set end of refJSONs to "{\"guid_1\":\"" & my escapeJSON(sLoc) & "\", \"guid_2\":\"" & my escapeJSON(eLoc) & "\", \"direction\":1}"
+						end if
+					end if
+				end repeat
+				return refJSONs
+			end tell
+	on error errMsg number errNum
+		log "Error fetching relationships for topic " & topicIDForLog & ": " & errMsg & " (" & errNum & ")"
+		return {}
+	end try
+end _get_relationships_json
 
 on _findTopicByID(targetID as string)
 	if targetID is "" then return missing value

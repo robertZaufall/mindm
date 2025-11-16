@@ -657,21 +657,21 @@ class MindmapDocument:
                 done={},
                 done_global=done_global)
 
-        # Create relationships between topics
-        for reference in relationships:
-            object1_guids = done_global[reference.guid_1]
-            object2_guids = done_global[reference.guid_2]
-            for object1_guid in object1_guids:
-                for object2_guid in object2_guids:
-                    self.mindm.add_relationship(object1_guid, object2_guid, reference.label)
+            # Create relationships between topics
+            for reference in relationships:
+                object1_guids = done_global[reference.guid_1]
+                object2_guids = done_global[reference.guid_2]
+                for object1_guid in object1_guids:
+                    for object2_guid in object2_guids:
+                        self.mindm.add_relationship(object1_guid, object2_guid, reference.label)
 
-        # Create topic links
-        for link in links:
-            object1_guids = done_global[link.guid_1]
-            object2_guids = done_global[link.guid_2]
-            for object1_guid in object1_guids:
-                for object2_guid in object2_guids:
-                    self.mindm.add_topic_link(object1_guid, object2_guid, link.label)
+            # Create topic links
+            for link in links:
+                object1_guids = done_global[link.guid_1]
+                object2_guids = done_global[link.guid_2]
+                for object1_guid in object1_guids:
+                    for object2_guid in object2_guids:
+                        self.mindm.add_topic_link(object1_guid, object2_guid, link.label)
 
     def create_mindmap_and_finalize(self):
         """
