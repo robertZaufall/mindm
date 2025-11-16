@@ -1,0 +1,365 @@
+# MindManager Scripting Dictionary
+
+## Suite: Standard Suite (`????`)
+Common classes and commands for all applications.
+### Commands
+- **open** (`aevtodoc`): Open a document.
+  - Direct parameter: type `file (list)`; The file(s) to be opened.
+- **close** (`coreclos`): Close a document.
+  - Direct parameter: type `specifier`; The document(s) or window(s) to close.
+  - Parameters:
+    - `saving` `savo` (type `save options` (optional)): Whether or not changes should be saved before closing.
+    - `saving in` `kfil` (type `file` (optional)): The file in which to save the document.
+- **save** (`coresave`): Save a document.
+  - Direct parameter: type `specifier`; The document(s) or window(s) to save.
+  - Parameters:
+    - `in` `kfil` (type `file` (optional)): The file in which to save the document.
+- **print** (`aevtpdoc`): Print a document.
+  - Direct parameter: type `file (list), specifier`; The file(s), document(s), or window(s) to be printed.
+  - Parameters:
+    - `with properties` `prdt` (type `print settings` (optional)): The print settings to use.
+    - `print dialog` `pdlg` (type `boolean` (optional)): Should the application show the print dialog?
+- **quit** (`aevtquit`): Quit the application.
+  - Parameters:
+    - `saving` `savo` (type `save options` (optional)): Whether or not changed documents should be saved before closing.
+- **count** (`corecnte`): Return the number of elements of a particular class within an object.
+  - Direct parameter: type `specifier`; The object whose elements are to be counted.
+  - Parameters:
+    - `each` `kocl` (type `type` (optional)): The class of objects to be counted.
+  - Result: type `integer`; The number of elements.
+- **delete** (`coredelo`): Delete an object.
+  - Direct parameter: type `specifier`; The object to delete.
+- **duplicate** (`coreclon`): Copy object(s) and put the copies at a new location.
+  - Direct parameter: type `specifier`; The object(s) to duplicate.
+  - Parameters:
+    - `to` `insh` (type `location specifier`): The location for the new object(s).
+    - `with properties` `prdt` (type `record` (optional)): Properties to be set in the new duplicated object(s).
+- **exists** (`coredoex`): Verify if an object exists.
+  - Direct parameter: type `any`; The object in question.
+  - Result: type `boolean`; true if it exists, false if not.
+- **make** (`corecrel`): Make a new object. The " for " parameter is not part of the Apple defined core suite. This parameter is used when the destination of an object is implied by the class of the object being created. For example, the statement: make new boundary for the first subtopic of the central topic of document 1 creates a new boundary object and assigns it to the boundary of the specified topic.
+  - Parameters:
+    - `new` `kocl` (type `type`): The class of the new object.
+    - `at` `insh` (type `location specifier` (optional)): The location at which to insert the object.
+    - `for` `For ` (type `specifier` (optional)): The object that will own the object being created.
+    - `with data` `data` (type `any` (optional)): The initial data for the object.
+    - `with properties` `prdt` (type `record` (optional)): The initial values for properties of the object.
+  - Result: type `specifier`; to the new object
+- **move** (`coremove`): Move object(s) to a new location.
+  - Direct parameter: type `specifier`; The object(s) to move.
+  - Parameters:
+    - `to` `insh` (type `location specifier`): The new location for the object(s).
+### Enumerations
+- **save options** (`savo`): No description.
+  - `yes` (`yes `): Save the file.
+  - `no` (`no  `): Do not save the file.
+  - `ask` (`ask `): Ask the user whether or not to save the file.
+- **printing error handling** (`enum`): No description.
+  - `standard` (`lwst`): Standard PostScript error handling.
+  - `detailed` (`lwdt`): Print a detailed report of PostScript errors.
+### Classes
+- **item** (`cobj`): A scriptable object.
+  - Properties:
+    - `class` (`pcls`, type `type` access `r`): The class of the object.
+    - `properties` (`pALL`, type `record`): All of the object's properties.
+  - Responds to:
+    - `count`
+    - `delete`
+    - `duplicate`
+    - `exists`
+    - `move`
+- **application** (`capp`): The application's top-level scripting object.
+  - Properties:
+    - `name` (`pnam`, type `text` access `r`): The name of the application.
+    - `frontmost` (`pisf`, type `boolean` access `r`): Is this the frontmost (active) application?
+    - `version` (`vers`, type `text` access `r`): The version of the application.
+  - Elements:
+    - `document`
+    - `window`, access `r`
+  - Responds to:
+    - `open`
+    - `print`
+    - `quit`
+    - `make`
+- **document** (`docu`): A MindManager Map document.
+  - Properties:
+    - `name` (`pnam`, type `text`): The document's name.
+    - `modified` (`imod`, type `boolean` access `r`): Has the document been modified since the last save?
+    - `file` (`file`, type `file` access `r`): The document's location on disk.
+    - `author` (`Athr`, type `text`): The author of the map.
+    - `category` (`Cgry`, type `text`): Category this map has been assigned to.
+    - `central topic` (`CTpc`, type `topic` access `r`): The central topic of a map.
+    - `comments` (`Cmts`, type `text`): Comments assigned to the document.
+    - `company` (`Job `, type `text`): Company where the map was authored.
+    - `document type` (`DTyp`, type `document type` access `r`): Kind of document.
+    - `email address` (`Emal`, type `text`): Email address of the map's author.
+    - `keywords` (`Kwds`, type `text`): Keywords describing this map.
+    - `manager name` (`Mgr `, type `text`): Name of the author's manager.
+    - `selection` (`Seln`, type `any` access `r`): The document's currently selected items.
+    - `stores preview image` (`ISav`, type `boolean`): When saved, does this document include a preview image?
+    - `subject` (`Sbjt`, type `text`): The subject the author assigned to the map.
+    - `URL base` (`HBas`, type `text`): Base location for all relative URLs.
+    - `zoom level` (`ZomL`, type `integer` access `r`): The magnification level as a percentage from 10 to 400. You can change this value with the zoom command.
+  - Elements:
+    - `topic`
+  - Responds to:
+    - `zoom`
+    - `balance map`
+    - `close`
+    - `print`
+    - `save`
+    - `delete`
+    - `select all`
+    - `deselect all`
+    - `move`
+    - `duplicate`
+- **window** (`cwin`): A window.
+  - Properties:
+    - `name` (`pnam`, type `text` access `r`): The full title of the window.
+    - `id` (`ID  `, type `integer` access `r`): The unique identifier of the window.
+    - `index` (`pidx`, type `integer`): The index of the window, ordered front to back.
+    - `bounds` (`pbnd`, type `rectangle`): The bounding rectangle of the window.
+    - `closeable` (`hclb`, type `boolean` access `r`): Whether the window has a close box.
+    - `miniaturizable` (`ismn`, type `boolean` access `r`): Whether the window can be minimized.
+    - `miniaturized` (`pmnd`, type `boolean`): Whether the window is currently minimized.
+    - `resizable` (`prsz`, type `boolean` access `r`): Whether the window can be resized.
+    - `visible` (`pvis`, type `boolean`): Whether the window is currently visible.
+    - `zoomable` (`iszm`, type `boolean` access `r`): Whether the window can be zoomed.
+    - `zoomed` (`pzum`, type `boolean`): Whether the window is currently zoomed.
+    - `document` (`docu`, type `document` access `r`): The document whose contents are being displayed in the window.
+    - `titled` (`ptit`, type `boolean` access `r`): Whether the window has a title bar.
+    - `floating` (`isfl`, type `boolean` access `r`): Whether the window floats.
+    - `modal` (`pmod`, type `boolean` access `r`): Whether the window is the application's current modal window.
+  - Responds to:
+    - `close`
+    - `print`
+    - `save`
+
+## Suite: Text Suite (`????`)
+A set of basic classes for text processing.
+### Classes
+- **rich text** (`ctxt`): Rich (styled) text.
+  - Properties:
+    - `color` (`colr`, type `color`): The color of the first character.
+    - `font` (`font`, type `text`): The name of the font of the first character.
+    - `size` (`ptsz`, type `integer`): The size in points of the first character.
+  - Elements:
+    - `character`
+    - `paragraph`
+    - `word`
+    - `attribute run`
+    - `attachment`
+- **character** (`cha `): This subdivides the text into characters.
+  - Properties:
+    - `color` (`colr`, type `color`): The color of the first character.
+    - `font` (`font`, type `text`): The name of the font of the first character.
+    - `size` (`ptsz`, type `integer`): The size in points of the first character.
+  - Elements:
+    - `character`
+    - `paragraph`
+    - `word`
+    - `attribute run`
+    - `attachment`
+- **paragraph** (`cpar`): This subdivides the text into paragraphs.
+  - Properties:
+    - `color` (`colr`, type `color`): The color of the first character.
+    - `font` (`font`, type `text`): The name of the font of the first character.
+    - `size` (`ptsz`, type `integer`): The size in points of the first character.
+  - Elements:
+    - `character`
+    - `paragraph`
+    - `word`
+    - `attribute run`
+    - `attachment`
+- **word** (`cwor`): This subdivides the text into words.
+  - Properties:
+    - `color` (`colr`, type `color`): The color of the first character.
+    - `font` (`font`, type `text`): The name of the font of the first character.
+    - `size` (`ptsz`, type `integer`): The size in points of the first character.
+  - Elements:
+    - `character`
+    - `paragraph`
+    - `word`
+    - `attribute run`
+    - `attachment`
+- **attribute run** (`catr`): This subdivides the text into chunks that all have the same attributes.
+  - Properties:
+    - `color` (`colr`, type `color`): The color of the first character.
+    - `font` (`font`, type `text`): The name of the font of the first character.
+    - `size` (`ptsz`, type `integer`): The size in points of the first character.
+  - Elements:
+    - `character`
+    - `paragraph`
+    - `word`
+    - `attribute run`
+    - `attachment`
+- **attachment** (`atts`): Represents an inline text attachment. This class is used mainly for make commands.
+  - Properties:
+    - `file name` (`atfn`, type `text`): The path to the file for the attachment.
+
+## Suite: MindManager Suite (`MMas`)
+The tools you need to interact with MindManager.
+### Commands
+- **reveal** (`MMasShow`): Make sure an object is visible in the current view.
+  - Direct parameter: type `topic`; The topic to reveal.
+- **select** (`MMasSlct`): Select objects in the map.
+  - Direct parameter: type `specifier (list)`; No description.
+- **select all** (`MMasSAll`): Select all the items in a map.
+  - Direct parameter: type `document`; No description.
+- **deselect all** (`MMasDslc`): Deselect the items in a map.
+  - Direct parameter: type `document`; No description.
+- **zoom** (`MMasZom2`): Change magnification of a document. You can set the value from 10 (10% magnification) to 400 (4x magnification). You can also use zoom to fit map or zoom to fit selection.
+  - Direct parameter: type `document`; The document to zoom.
+  - Parameters:
+    - `to` `ZmMd` (type `zoom mode, integer`): The new magnification of the document.
+- **balance map** (`MMasBnce`): Reapply the subtopic layout of the central topic to balance the map.
+  - Direct parameter: type `document`; The document to balance.
+### Enumerations
+- **document type** (`Dtyp`): Types of map documents.
+  - `map` (`MMap`): The document type of a plain MindManager map.
+  - `template` (`MMat`): A document that contains a map template.
+  - `style` (`MMas`): A document that defines the style of a map.
+  - `map part` (`MMmp`): A document type representing a map part.
+  - `markers` (`MMrk`): A document containing a set of markers.
+- **zoom mode** (`ZmMd`): Zoom mode.
+  - `fit map` (`ZmM1`): No description.
+  - `fit selection` (`ZmM2`): No description.
+- **no setting** (`TPr#`): A special value indicating no setting for the given property.
+  - `none` (`None`): No description.
+- **color constant** (`MMCl`): Constants that can be used in the place of colors.
+  - `none` (`None`): No description.
+  - `automatic` (`Auto`): Setting a color to this value asks the topic to use the default color for the map style.
+- **topic shape** (`TShp`): Shapes of topics.
+  - `none` (`None`): No description.
+  - `line` (`Ts02`): No description.
+  - `rectangle` (`Ts03`): No description.
+  - `rounded rectangle` (`Ts04`): No description.
+  - `hexagon` (`Ts05`): No description.
+  - `octagon` (`Ts06`): No description.
+  - `circle` (`Ts07`): No description.
+  - `oval` (`Ts08`): No description.
+  - `image` (`Ts09`): The topic's shape is defined by an image rather than a geometric shape.
+  - `rectangle balloon` (`Ts10`): No description.
+  - `rounded rectangle balloon` (`Ts11`): No description.
+  - `oval balloon` (`Ts12`): No description.
+  - `thought bubble` (`Ts13`): No description.
+  - `highlight` (`Ts14`): No description.
+  - `automatic` (`Auto`): Setting a shape to this value asks the topic to use the default shape for the map style.
+- **line shape** (`LShp`): The shapes used by relationship lines.
+  - `bezier` (`Ls01`): No description.
+  - `straight` (`Ls02`): No description.
+  - `angled` (`Ls03`): No description.
+  - `curved` (`Ls04`): No description.
+- **capitalization style** (`tCap`): Capitalization of displayed text.
+  - `no capitalization` (`tCp1`): No description.
+  - `sentence capitalization` (`tCp2`): No description.
+  - `title capitalization` (`tCp3`): No description.
+  - `upper case capitalization` (`tCp4`): No description.
+  - `lower case capitalization` (`tCp5`): No description.
+- **dash pattern** (`Dshp`): Dash patterns used for boundaries and relationships.
+  - `solid` (`Dp01`): No description.
+  - `round dot` (`Dp02`): No description.
+  - `square dot` (`Dp03`): No description.
+  - `dash` (`Dp04`): No description.
+  - `dash dot` (`Dp05`): No description.
+  - `long dash` (`Dp06`): No description.
+  - `long dash dot` (`Dp07`): No description.
+  - `long dash dot dot` (`Dp08`): No description.
+- **boundary shape** (`bShp`): Shape options for boundaries.
+  - `lines` (`Bs01`): No description.
+  - `zig zag` (`Bs02`): No description.
+  - `scallops` (`Bs03`): No description.
+  - `waves` (`Bs04`): No description.
+  - `curved line` (`Bs05`): No description.
+  - `rectangle` (`Bs06`): No description.
+  - `curved rectangle` (`Bs07`): No description.
+  - `elbow` (`Bs08`): No description.
+  - `sheared elbow` (`Bs09`): No description.
+  - `arc` (`Bs10`): No description.
+  - `curve` (`Bs11`): No description.
+- **arrowhead** (`bShp`): Shapes of arrowheads at the ends of a relationship.
+  - `no arrow` (`Rs01`): No description.
+  - `arrow` (`Rs02`): No description.
+  - `open arrow` (`Rs03`): No description.
+  - `stealth arrow` (`Rs04`): No description.
+  - `diamond arrow` (`Rs05`): No description.
+  - `oval arrow` (`Rs06`): No description.
+### Classes
+- **topic** (`Topc`): A topic in a map.
+  - Properties:
+    - `id` (`ID  `, type `text` access `r`): An identifier for a topic that is unique within its map.
+    - `name` (`pnam`, type `text`): The name of a topic. A topic's name is its title without any formatting. Names are not guaranteed to be unique and a topic without a title can have an empty string as its name.
+    - `bookmark` (`Bkmk`, type `boolean`): Has the topic been bookmarked?
+    - `boundary` (`Bdry`, type `boundary` access `r`): The boundary surrounding the topic.
+    - `collapsed` (`Clsd`, type `boolean`): Is the subtree rooted at this topic collapsed?
+    - `filtered` (`Ftrd`, type `boolean`): Is this topic filtered?
+    - `fill color` (`FClr`, type `any`): The color used to fill the topic's shape.
+    - `hyperlink URL` (`HLnk`, type `text`): The hyperlink associated with this topic.
+    - `label` (`Labl`, type `text`): The hyperlink label applied to the topic.
+    - `level` (`Levl`, type `integer` access `r`): The depth of the topic in the central topic's tree.
+    - `line color` (`LClr`, type `any`): The color of the line connecting the topic to its parent.
+    - `main topic` (`Mtpc`, type `boolean` access `r`): Is this topic a main topic (a direct subtopic of the central topic)?
+    - `notes` (`TpcN`, type `text`): The text of the notes attached to this topic.
+    - `parent` (`Prnt`, type `any` access `r`): The map element that this topic descends from.
+    - `shape` (`Shap`, type `topic shape`): The shape of the topic.
+    - `task` (`Task`, type `task` access `r`): The project management task information for this topic.
+    - `text color` (`LClr`, type `any`): The color applied to the text of the topic's title. The text of a topic's title can have multiple colors. Changing this property will change the color of the entire title.
+    - `title` (`TpcT`, type `any`): The title of the topic.
+    - `visible` (`pvis`, type `boolean` access `r`): Is the topic currently visible?
+  - Elements:
+    - `callout`
+    - `relationship`
+    - `subtopic`
+    - `attribute`
+  - Responds to:
+    - `make`
+    - `reveal`
+    - `move`
+    - `duplicate`
+- **subtopic** (`STpc`): A synonym of topic that refers to a topic that descends from another topic.
+- **callout** (`Calt`): A synonym of topic that refers to a callout attached to a topic.
+- **boundary** (`Bdry`): A border that surrounds a topic and its subtopics. To create a boundary around a topic you can use a statement like: make new boundary for aReferenceToATopic The central topic cannot have a boundary.
+  - Properties:
+    - `id` (`ID  `, type `text` access `r`): A identifier for the boundary that is unique within its map.
+    - `callout` (`Calt`, type `callout`): The callout topic attached to the boundary. Boundaries can only have one callout.
+    - `fill color` (`FClr`, type `any`): The color used to fill the boundary.
+    - `line color` (`LClr`, type `any`): The color applied to the boundary's line.
+    - `line dash` (`Ldsh`, type `any`): The dash pattern applied to the boundary's line.
+    - `line width` (`bLWt`, type `real`): The width of the boundary's line (in points).
+    - `shape` (`Shap`, type `any`): Shape of this boundary.
+    - `topic` (`Topc`, type `topic` access `r`): The topic that this boundary surrounds.
+  - Elements:
+    - `relationship`
+- **relationship** (`Rlsh`): This object represents a relationship between two map elements. When creating a relationship for the first time, you must specify both the starting location and ending location for the relationship using the with properties parameter of the make command: make new relationship with properties ¬ { starting location : aTopic, ending location : aTopic } although the terms starting location and ending location imply a directonality to the relationship, the shape of the arrowheads are independent of those designations. This allows you to create directional, bi-directional, and un-directed relationships on a map.
+  - Properties:
+    - `id` (`ID  `, type `text` access `r`): A identifier for the relationship that is unique within its document.
+    - `starting location` (`Cob1`, type `any`): The map item found at the starting location of the relationship.
+    - `ending location` (`Cob2`, type `any`): The map item found at the ending location of the relationship.
+    - `starting arrowhead` (`Shp1`, type `any`): The shape of the arrowhead drawn at the starting location of the relationship.
+    - `ending arrowhead` (`Shp2`, type `any`): The shape of the arrowhead drawn at the ending location of the relationship.
+    - `line color` (`LClr`, type `any`): The color of the relationship's line.
+    - `line dash` (`Ldsh`, type `any`): The dash pattern of this relationship.
+    - `line shape` (`LShp`, type `line shape`): The shape of the relationship's line.
+    - `line width` (`bLWt`, type `real`): The width of the relationship's line.
+    - `control points` (`CoPt`, type `any`): Locations of the intermediate points that define the relationship line's shape. The control points list is an array of four values. The four values represent offsets from the staring or ending location to the corresponding control point. The first two values represent the horizontal and vertical offsets respectively for the control point connected to the starting location. The third and fourth values define the offset for the control point connected to the ending location.
+  - Elements:
+    - `callout`
+- **task** (`Task`): Project management task information found on a topic.
+  - Properties:
+    - `topic` (`Topc`, type `topic` access `r`): The topic that this task information describes.
+    - `start date` (`TkSD`, type `date`): The date the task starts.
+    - `due date` (`TkDD`, type `date`): The date that the task is due.
+    - `duration` (`TkDr`, type `integer`): How long the task lasts in hours.
+    - `percent complete` (`TkPc`, type `any`): What percentage (0 - 100) of the task has been completed? (This can be none.)
+    - `priority` (`TkPr`, type `any`): The priority of the task ranging from 1 (highest priority) to 9 (lowest priority) or none.
+    - `resources` (`TkRs`, type `text`): People or other resources assigned to this task.
+    - `categories` (`TkCt`, type `text`): Categories this task belongs to.
+- **attribute** (`ATtr`): Attributes are ways for scripts to attach custom data to topics. Attributes are stored in categories called 'name spaces'. Within each category are a series of attributes with unique names. Each attribute also has a string that is the attribute's value.
+  - Properties:
+    - `id` (`ID  `, type `text` access `r`): The unique identifier for this attribute. The ID is formed by concatenating the name onto the end of the name space with a '#' between them
+    - `name space` (`Nspc`, type `text`): Name spaces are used to help prevent clashes between attributes with the same name. Each application or script should define it's own name space and use that name space for all its attributes. A good choice for a name space is a Uniform Resource Identifier (URI), but that is not a requirement. A name space cannot contain the '#' character
+    - `name` (`pnam`, type `text`): The common name or identifying key for this attribute. Names must consist of only letters, numbers, and underscore characters. The first character must be a letter
+    - `value` (`valu`, type `text`): A text string that defines the value of the attribute.
+
+## Suite: Value types (`Valu`)
+Value types used in the application.
