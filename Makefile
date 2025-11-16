@@ -1,5 +1,8 @@
 .PHONY: clean build update-version docs
 
+LLMS_INCLUDE   = pyproject.toml,LICENSE,README.md,mindm/*,mindmap/*,examples/*
+LLMS_EXCLUDE   = mindm/as/*.md,llms.txt,update_version.py,examples/docs,examples/Test_DOM.*,mindm/__pycache__,mindmap/__pycache__,mindm/.DS_Store,mindmap/.DS_Store,mindm/as/*.scpt
+
 # Default target
 all: clean update-version build install llms docs
 
@@ -22,7 +25,7 @@ install:
 # llms
 llms:
 	pip install gitingest
-	gitingest . -o llms.txt -i "pyproject.toml,LICENSE,README.md,mindm/*,mindmap/*,examples/*" -e "llms.txt,update_version.py,examples/docs,examples/Test_DOM.*,mindm/__pycache__,mindmap/__pycache__,mindm/.DS_Store,mindmap/.DS.Store,mindm/as/*.scpt"
+	gitingest . -o llms.txt -i "$(LLMS_INCLUDE)" -e "$(LLMS_EXCLUDE)"
 
 # Generate documentation
 docs:

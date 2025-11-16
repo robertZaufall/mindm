@@ -11,7 +11,7 @@ BUILDDIR      = _build
 GITINGEST     ?= gitingest
 LLMS_OUTPUT    = $(BUILDDIR)/html/llms.txt
 LLMS_INCLUDE   = pyproject.toml,LICENSE,README.md,mindm/*,mindmap/*,examples/*
-LLMS_EXCLUDE   = llms.txt,update_version.py,examples/docs,examples/Test_DOM.*,mindm/__pycache__,mindmap/__pycache__,mindm/.DS_Store,mindmap/.DS.Store,mindm/as/*.scpt
+LLMS_EXCLUDE   = mindm/as/*.md,llms.txt,update_version.py,examples/docs,examples/Test_DOM.*,mindm/__pycache__,mindmap/__pycache__,mindm/.DS_Store,mindmap/.DS_Store,mindm/as/*.scpt
 
 # Put it first so that "make" without argument is like "make help".
 help:

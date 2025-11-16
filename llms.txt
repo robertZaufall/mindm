@@ -250,7 +250,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mindm"
-version = "0.0.5.3"
+version = "0.0.5.4"
 authors = [
   { name="Robert Zaufall" },
 ]
@@ -447,9 +447,10 @@ mindmap
         [Barrier strategies] %% {"id": 10}
     [Product & Tech] %% {"id": 19}
       [MVP Design] %% {"id": 20}
-        [Core feature set] %% {"id": 21}
-        [User flows map] %% {"id": 22}
-        [Rapid prototyping] %% {"id": 23}
+        [Core feature set] %% {"id": 21, "notes": {"text": "Some Notes"}, "icons": [{"type": "star"}]}
+        [User flows map] %% {"id": 22, "links": [{"text": "label", "url": "https://example.com"}]}
+        [Rapid prototyping] %% {"id": 23, "references": [{"id_1": 23, "id_2": 6, "direction": 1}]}
+        [Topic] %% {"id": 24, "notes": {"text": "Notes"}, "references": [{"id_1": 24, "id_2": 5, "direction": 1}], "links": [{"text": "label", "url": "https://example.com"}], "image": {"text": "C:\\path\\to\\image.png"}, "icons": [{"text": "StockIcon-36", "is_stock_icon": true, "index": 36}], "tags": ["tag1"]}
 """
 
 guid_mapping = {}
@@ -458,6 +459,9 @@ print(json.dumps(mms.serialize_object_simple(deserialized), indent=1))
 document_new = mm.MindmapDocument(macos_access=macos_access)
 document_new.mindmap = deserialized
 document_new.create_mindmap()
+
+serialized = mms.serialize_mindmap(document_new.mindmap, guid_mapping, id_only=False)
+print(serialized)
 
 print("Done")
 
@@ -1752,11 +1756,37 @@ class Mindmanager:
         notes_obj = None
         if node_dict.get("notes"):
             notes_obj = MindmapNotes(text=node_dict["notes"])
+        references = []
+        for ref in node_dict.get("references", []) or []:
+            if not isinstance(ref, dict):
+                continue
+            direction = 0
+            try:
+                direction = int(ref.get("direction", 0) or 0)
+            except (TypeError, ValueError):
+                direction = 0
+            references.append(
+                MindmapReference(
+                    direction=direction,
+                    guid_1=ref.get("guid_1", ""),
+                    guid_2=ref.get("guid_2", ""),
+                )
+            )
+        tags = []
+        for tag in node_dict.get("tags", []) or []:
+            if isinstance(tag, dict):
+                text_val = tag.get("text", "")
+            else:
+                text_val = tag
+            if text_val:
+                tags.append(MindmapTag(text=text_val))
         topic = MindmapTopic(
             guid=node_dict.get("guid", ""),
             text=node_dict.get("text", ""),
             level=int(node_dict.get("level", 0)),
             notes=notes_obj,
+            tags=tags,
+            references=references,
         )
         subtopics = node_dict.get("subtopics", [])
         for child_dict in subtopics:
@@ -3001,9 +3031,19 @@ on doGetSingleProperties(topicID as string)
 		set escapedID to my escapeJSON(topicID)
 		set escapedName to my escapeJSON(propName of propertiesRecord)
 		set escapedNotes to my escapeJSON(propNotes of propertiesRecord)
-		set propLevel to propLevel of propertiesRecord
+			set propLevel to propLevel of propertiesRecord
+			
+			set refsJSONs to my _get_relationships_json(theTopic, topicID)
+		set oldTID to AppleScript's text item delimiters
+		set AppleScript's text item delimiters to ","
+		if refsJSONs is missing value or (count of refsJSONs) is 0 then
+			set refsJoined to ""
+		else
+			set refsJoined to refsJSONs as text
+		end if
+		set AppleScript's text item delimiters to oldTID
 		
-		return "{\"guid\":\"" & escapedID & "\", \"text\":\"" & escapedName & "\", \"level\":" & propLevel & ", \"notes\":\"" & escapedNotes & "\"}"
+			return "{\"guid\":\"" & escapedID & "\", \"text\":\"" & escapedName & "\", \"level\":" & propLevel & ", \"notes\":\"" & escapedNotes & "\", \"references\":[" & refsJoined & "]}"
 	on error errMsg number errNum
 		return "{ \"guid\":\"" & my escapeJSON(topicID) & "\", \"error\": \"Unexpected error in doGetSingleProperties: " & my escapeJSON(errMsg) & " (Code: " & errNum & ")\" }"
 	end try
@@ -3053,8 +3093,14 @@ on doGetListProperties(topicIDList as list)
 						set escapedID to my escapeJSON(currentTopicID_str)
 						set escapedName to my escapeJSON(propName of propertiesRecord)
 						set escapedNotes to my escapeJSON(propNotes of propertiesRecord)
-						set propLevel to propLevel of propertiesRecord
-						set jsonObject to "{\"guid\":\"" & escapedID & "\", \"text\":\"" & escapedName & "\", \"level\":" & propLevel & ", \"notes\":\"" & escapedNotes & "\"}"
+							set propLevel to propLevel of propertiesRecord
+							set refsJSONs to my _get_relationships_json(theTopic, currentTopicID_str)
+						if refsJSONs is missing value or (count of refsJSONs) is 0 then
+							set refsJoined to ""
+						else
+							set refsJoined to refsJSONs as text
+						end if
+							set jsonObject to "{\"guid\":\"" & escapedID & "\", \"text\":\"" & escapedName & "\", \"level\":" & propLevel & ", \"notes\":\"" & escapedNotes & "\", \"references\":[" & refsJoined & "]}"
 						set end of resultsList to jsonObject
 					end if
 				on error errMsg number errNum
@@ -3093,7 +3139,7 @@ end doGetListProperties
 
 
 on _buildTreeRecursive(aTopic)
-	local topicID, propertiesRecord, tID_escaped, tName_escaped, tLevel, tNotes_escaped, childJSONs, childTopicObjects, childTopic, jsonText, oldTID, idErr, childErr
+	local topicID, propertiesRecord, tID_escaped, tName_escaped, tLevel, tNotes_escaped, childJSONs, childTopicObjects, childTopic, jsonText, oldTID, idErr, childErr, refsJSONs, refsJoined, refsDelims
 	
 	set topicID to missing value
 	try
@@ -3132,9 +3178,19 @@ on _buildTreeRecursive(aTopic)
 		set childJSONs to {"{ \"error\": \"Could not retrieve subtopics for topic " & tID_escaped & "\" }"}
 	end if
 	
+	set refsJSONs to my _get_relationships_json(aTopic, topicID)
+	set refsDelims to AppleScript's text item delimiters
+	set AppleScript's text item delimiters to ","
+	if refsJSONs is missing value or (count of refsJSONs) is 0 then
+		set refsJoined to ""
+	else
+		set refsJoined to refsJSONs as text
+	end if
+	set AppleScript's text item delimiters to refsDelims
+	
 	set oldTID to AppleScript's text item delimiters
 	set AppleScript's text item delimiters to ","
-	set jsonText to "{\"guid\":\"" & tID_escaped & "\", \"text\":\"" & tName_escaped & "\", \"level\":" & tLevel & ", \"notes\":\"" & tNotes_escaped & "\", \"subtopics\":[" & (childJSONs as text) & "]}"
+	set jsonText to "{\"guid\":\"" & tID_escaped & "\", \"text\":\"" & tName_escaped & "\", \"level\":" & tLevel & ", \"notes\":\"" & tNotes_escaped & "\", \"references\":[" & refsJoined & "], \"subtopics\":[" & (childJSONs as text) & "]}"
 	set AppleScript's text item delimiters to oldTID
 	
 	return jsonText
@@ -3176,6 +3232,7 @@ on _get_topic_properties_record(theTopic, topicIDForError)
 				set errorMsg to errorMsg & "Failed to get notes. "
 				log "Warning (_get_topic_properties_record): Could not get notes for topic " & topicIDForError & ": " & (notesErr as rich text) & " (" & (number of notesErr) & ")"
 			end try
+			
 		end tell
 		
 		if errorStatus then
@@ -3216,6 +3273,39 @@ on _get_subtopics_objects(parentTopic, parentIDForLog)
 		return missing value
 	end try
 end _get_subtopics_objects
+
+
+on _get_relationships_json(theTopic, topicIDForLog)
+	try
+		if theTopic is missing value then return {}
+		tell application "MindManager"
+			set rels to relationships of theTopic
+			if rels is missing value then return {}
+			if (count of rels) is 0 then return {}
+				set refJSONs to {}
+				repeat with r in rels
+					set sLoc to ""
+					set eLoc to ""
+					try
+						set sLoc to id of (starting location of r)
+					end try
+					try
+						set eLoc to id of (ending location of r)
+					end try
+					if sLoc is not "" and eLoc is not "" then
+						-- Only serialize from the perspective of the starting topic to avoid duplicate reverse edges
+						if sLoc is topicIDForLog then
+							set end of refJSONs to "{\"guid_1\":\"" & my escapeJSON(sLoc) & "\", \"guid_2\":\"" & my escapeJSON(eLoc) & "\", \"direction\":1}"
+						end if
+					end if
+				end repeat
+				return refJSONs
+			end tell
+	on error errMsg number errNum
+		log "Error fetching relationships for topic " & topicIDForLog & ": " & errMsg & " (" & errNum & ")"
+		return {}
+	end try
+end _get_relationships_json
 
 on _findTopicByID(targetID as string)
 	if targetID is "" then return missing value
@@ -3323,7 +3413,11 @@ property NSJSONSerialization : a reference to current application's NSJSONSerial
 property NSNull : a reference to current application's NSNull
 property NSArray : a reference to current application's NSArray
 property NSDictionary : a reference to current application's NSDictionary
+property NSMutableDictionary : a reference to current application's NSMutableDictionary
 property NSUTF8StringEncoding : a reference to current application's NSUTF8StringEncoding
+property guidMapping : {}
+property pendingReferences : {}
+property guidMappingDict : missing value
 
 on run argv
 	try
@@ -3342,7 +3436,8 @@ end run
 on handleCommand(argv)
 	if (count of argv) is 0 then
 		if SCRIPT_EDITOR_MODE then
-			set testResult to my handleCommand({"writeTree", "{\"guid\": \"F35D6F0A-916B-4BD4-B6C5-6FD3B8873421\", \"text\": \"Creating an AI startup\", \"subtopics\": [{\"guid\": \"AABE2CFB-E72E-47DB-8358-FEDF652384AF\", \"text\": \"Vision & Strategy\", \"subtopics\": [{\"guid\": \"6EC7E029-8AAF-4F95-A4F7-2DF9FC9C274E\", \"text\": \"Mission & Value\", \"subtopics\": [{\"guid\": \"62753394-43CF-4EA4-9D11-32A0B01B2316\", \"text\": \"Problem Statement\"}, {\"guid\": \"3702BC7C-F340-4915-9B9C-EA7723168674\", \"text\": \"Value Proposition\"}, {\"guid\": \"2B1EABD7-8DA6-477D-9066-26E33AD8465E\", \"text\": \"Target Outcomes\"}]}, {\"guid\": \"BE661CA1-ADC8-42F4-AC12-2F86ABC965CB\", \"text\": \"Market Positioning\", \"subtopics\": [{\"guid\": \"63B699E2-743E-4586-87E6-ABD87D6486BE\", \"text\": \"Differentiation\"}, {\"guid\": \"02033FA2-8748-4B88-9D75-9D2913781E55\", \"text\": \"Target Segments\"}, {\"guid\": \"369BD38C-859B-4FCF-8AFA-8D1529E3659A\", \"text\": \"Competitive Edge\"}]}, {\"guid\": \"ECE4A5EA-883F-43FA-AAD8-DF7A8DE9A6EF\", \"text\": \"Roadmap Planning\", \"subtopics\": [{\"guid\": \"348D9A7A-F46B-40ED-A484-5481831CFBF3\", \"text\": \"Milestones\"}, {\"guid\": \"5E54DBFF-924D-494E-B792-48C27C78A67A\", \"text\": \"Success Metrics\"}]}]}, {\"guid\": \"012909AC-7D04-4066-84BF-DA1F34F50A27\", \"text\": \"Product Development\", \"subtopics\": [{\"guid\": \"BC2B8FF2-40D1-4298-8874-F6CD74BF6830\", \"text\": \"MVP Design\", \"subtopics\": [{\"guid\": \"8131DB69-6557-426F-8F2D-634CEB5563F9\", \"text\": \"Core Features\"}, {\"guid\": \"141446D1-9C6B-4810-B20B-D90E90B6CCBD\", \"text\": \"User Flows\"}, {\"guid\": \"F1F35599-2CFB-4F53-948C-158A9D7FE4EC\", \"text\": \"Success Criteria\"}]}, {\"guid\": \"833ECBF0-448B-40CC-BF87-DD4924A3FEAA\", \"text\": \"Data Strategy\", \"subtopics\": [{\"guid\": \"E11F6404-22D2-4D60-AB3D-F52898F088F5\", \"text\": \"Data Sources\"}, {\"guid\": \"19D2CDBD-6EEA-408D-A2E1-BF96E9E1E7C1\", \"text\": \"Labeling Plan\"}, {\"guid\": \"55D19F0B-1792-49FF-8A75-1DCFFAC1428A\", \"text\": \"Privacy Controls\"}]}, {\"guid\": \"3DD1CAEA-3B37-43E7-87C1-C3DFA22B3723\", \"text\": \"Model Lifecycle\", \"subtopics\": [{\"guid\": \"526F23CC-C658-4A9F-A894-76689A3B7CDB\", \"text\": \"Training Pipeline\"}, {\"guid\": \"46541951-9D8D-43A3-8246-5204F973B2F8\", \"text\": \"Evaluation Metrics\"}, {\"guid\": \"82A7CF2A-8D63-4A3B-9D54-4ADA1AB6FBEF\", \"text\": \"Iteration Plan\"}]}]}, {\"guid\": \"57DC272F-01E9-4B2A-B527-BE09A4380656\", \"text\": \"Team & Hiring\", \"subtopics\": [{\"guid\": \"9B3F327D-D163-4D6B-BE58-2F48C95D70D8\", \"text\": \"Founding Roles\", \"subtopics\": [{\"guid\": \"84D826FD-0439-4830-B00F-94CDD66D3BD0\", \"text\": \"CEO Responsibilities\"}, {\"guid\": \"6684A509-97EA-4458-9E10-60269A49389A\", \"text\": \"CTO Responsibilities\"}, {\"guid\": \"7B0D894C-36B1-49FB-8087-FB1C2EB5DD30\", \"text\": \"Product Lead Duties\"}]}, {\"guid\": \"E02B460A-02C1-4806-92DF-60FA8A1D96FA\", \"text\": \"Recruiting Plan\", \"subtopics\": [{\"guid\": \"888565DE-8B5C-4CE9-8CF3-5D7D1F7EF59B\", \"text\": \"Hiring Channels\"}, {\"guid\": \"4C4556A4-CC61-44F3-8BED-642DD034D2DA\", \"text\": \"Interview Process\"}]}, {\"guid\": \"89A17160-7CE0-460B-AAC0-E5D34C3D1CC0\", \"text\": \"Culture & Ops\", \"subtopics\": [{\"guid\": \"7CA6AC28-CC46-4290-A2C4-58221AA8DC92\", \"text\": \"Remote Policies\"}, {\"guid\": \"23A9F25C-4DD6-42DA-BEE7-02D542A88B95\", \"text\": \"Performance Reviews\"}]}]}, {\"guid\": \"33B58ECF-87BB-4A55-A1DF-0B9B8BFAB28C\", \"text\": \"Fundraising\", \"subtopics\": [{\"guid\": \"AF86A2B5-24AD-4C5B-9A47-B989B95D7DAB\", \"text\": \"Funding Strategy\", \"subtopics\": [{\"guid\": \"74CDCA7A-4FD5-4582-B3AB-0AD31EC3D9F3\", \"text\": \"Bootstrapping Plan\"}, {\"guid\": \"B8259997-4415-4E28-A22A-F7A7A50C3723\", \"text\": \"VC Pitch Focus\"}, {\"guid\": \"1F1F0714-4563-4A0E-8A23-05A5959F10FB\", \"text\": \"Angel Outreach\"}]}, {\"guid\": \"C088D7C0-536C-4D74-B0F8-411A70715A8F\", \"text\": \"Financial Planning\", \"subtopics\": [{\"guid\": \"0A837281-42C0-454B-80A7-E5D6009200BE\", \"text\": \"Burn Rate\"}, {\"guid\": \"56A17032-929C-4879-AAEC-2AEB56CECE45\", \"text\": \"Runway Management\"}, {\"guid\": \"26737FCB-647C-4919-8C1E-CF04DB82798A\", \"text\": \"Forecasts\"}]}, {\"guid\": \"B2040CFC-9B8A-4A81-AFB2-77ABA252AFD8\", \"text\": \"Investor Relations\", \"subtopics\": [{\"guid\": \"02F5F4D1-6333-491D-8473-7DA8CC17063F\", \"text\": \"Cap Table Management\"}, {\"guid\": \"854288EC-E443-4488-8EEC-E9266B3C764B\", \"text\": \"Demo Day Prep\"}]}]}, {\"guid\": \"00DCEE21-DF78-4994-B54A-719E34711383\", \"text\": \"Go-to-Market\", \"subtopics\": [{\"guid\": \"3F5AA657-3BC4-4A73-A808-76E497A6A350\", \"text\": \"Pricing Model\", \"subtopics\": [{\"guid\": \"AC53DAE8-4833-4A61-B6D6-DC0E3E8EBAC6\", \"text\": \"Subscription Plans\"}, {\"guid\": \"14430046-C744-4BBC-8EDA-563C18645FB1\", \"text\": \"Enterprise Pricing\"}]}, {\"guid\": \"CDF9F7D0-19B0-421D-ABD4-88BBB6FD1A16\", \"text\": \"Sales Strategy\", \"subtopics\": [{\"guid\": \"2909B9F8-6702-4F13-8E0E-4607077D3456\", \"text\": \"ICP Definition\"}, {\"guid\": \"070070AE-E98B-4F62-84EE-78958ED33CFE\", \"text\": \"Pipeline Management\"}, {\"guid\": \"F4E18FB4-CD26-4EDB-B5BC-158BBB526A64\", \"text\": \"Sales Hiring\"}]}, {\"guid\": \"F917AFF5-A2B7-4945-A0CD-E6229A8F5B5E\", \"text\": \"Marketing Plan\", \"subtopics\": [{\"guid\": \"A97358A2-D7DE-49F6-B511-4DAF6FAFB0D4\", \"text\": \"Content Strategy\"}, {\"guid\": \"63711491-91BB-4C68-A723-FCD075536FD1\", \"text\": \"Demand Gen Channels\"}, {\"guid\": \"AAC055E2-6CED-47F1-8B48-5E568858DFBA\", \"text\": \"PR & Partnerships\"}]}]}]}"})
+			-- set testResult to my handleCommand({"writeTree", "{\"guid\": \"F35D6F0A-916B-4BD4-B6C5-6FD3B8873421\", \"text\": \"Creating an AI startup\", \"subtopics\": [{\"guid\": \"AABE2CFB-E72E-47DB-8358-FEDF652384AF\", \"text\": \"Vision & Strategy\", \"subtopics\": [{\"guid\": \"6EC7E029-8AAF-4F95-A4F7-2DF9FC9C274E\", \"text\": \"Mission & Value\", \"subtopics\": [{\"guid\": \"62753394-43CF-4EA4-9D11-32A0B01B2316\", \"text\": \"Problem Statement\"}, {\"guid\": \"3702BC7C-F340-4915-9B9C-EA7723168674\", \"text\": \"Value Proposition\"}, {\"guid\": \"2B1EABD7-8DA6-477D-9066-26E33AD8465E\", \"text\": \"Target Outcomes\"}]}, {\"guid\": \"BE661CA1-ADC8-42F4-AC12-2F86ABC965CB\", \"text\": \"Market Positioning\", \"subtopics\": [{\"guid\": \"63B699E2-743E-4586-87E6-ABD87D6486BE\", \"text\": \"Differentiation\"}, {\"guid\": \"02033FA2-8748-4B88-9D75-9D2913781E55\", \"text\": \"Target Segments\"}, {\"guid\": \"369BD38C-859B-4FCF-8AFA-8D1529E3659A\", \"text\": \"Competitive Edge\"}]}, {\"guid\": \"ECE4A5EA-883F-43FA-AAD8-DF7A8DE9A6EF\", \"text\": \"Roadmap Planning\", \"subtopics\": [{\"guid\": \"348D9A7A-F46B-40ED-A484-5481831CFBF3\", \"text\": \"Milestones\"}, {\"guid\": \"5E54DBFF-924D-494E-B792-48C27C78A67A\", \"text\": \"Success Metrics\"}]}]}, {\"guid\": \"012909AC-7D04-4066-84BF-DA1F34F50A27\", \"text\": \"Product Development\", \"subtopics\": [{\"guid\": \"BC2B8FF2-40D1-4298-8874-F6CD74BF6830\", \"text\": \"MVP Design\", \"subtopics\": [{\"guid\": \"8131DB69-6557-426F-8F2D-634CEB5563F9\", \"text\": \"Core Features\"}, {\"guid\": \"141446D1-9C6B-4810-B20B-D90E90B6CCBD\", \"text\": \"User Flows\"}, {\"guid\": \"F1F35599-2CFB-4F53-948C-158A9D7FE4EC\", \"text\": \"Success Criteria\"}]}, {\"guid\": \"833ECBF0-448B-40CC-BF87-DD4924A3FEAA\", \"text\": \"Data Strategy\", \"subtopics\": [{\"guid\": \"E11F6404-22D2-4D60-AB3D-F52898F088F5\", \"text\": \"Data Sources\"}, {\"guid\": \"19D2CDBD-6EEA-408D-A2E1-BF96E9E1E7C1\", \"text\": \"Labeling Plan\"}, {\"guid\": \"55D19F0B-1792-49FF-8A75-1DCFFAC1428A\", \"text\": \"Privacy Controls\"}]}, {\"guid\": \"3DD1CAEA-3B37-43E7-87C1-C3DFA22B3723\", \"text\": \"Model Lifecycle\", \"subtopics\": [{\"guid\": \"526F23CC-C658-4A9F-A894-76689A3B7CDB\", \"text\": \"Training Pipeline\"}, {\"guid\": \"46541951-9D8D-43A3-8246-5204F973B2F8\", \"text\": \"Evaluation Metrics\"}, {\"guid\": \"82A7CF2A-8D63-4A3B-9D54-4ADA1AB6FBEF\", \"text\": \"Iteration Plan\"}]}]}, {\"guid\": \"57DC272F-01E9-4B2A-B527-BE09A4380656\", \"text\": \"Team & Hiring\", \"subtopics\": [{\"guid\": \"9B3F327D-D163-4D6B-BE58-2F48C95D70D8\", \"text\": \"Founding Roles\", \"subtopics\": [{\"guid\": \"84D826FD-0439-4830-B00F-94CDD66D3BD0\", \"text\": \"CEO Responsibilities\"}, {\"guid\": \"6684A509-97EA-4458-9E10-60269A49389A\", \"text\": \"CTO Responsibilities\"}, {\"guid\": \"7B0D894C-36B1-49FB-8087-FB1C2EB5DD30\", \"text\": \"Product Lead Duties\"}]}, {\"guid\": \"E02B460A-02C1-4806-92DF-60FA8A1D96FA\", \"text\": \"Recruiting Plan\", \"subtopics\": [{\"guid\": \"888565DE-8B5C-4CE9-8CF3-5D7D1F7EF59B\", \"text\": \"Hiring Channels\"}, {\"guid\": \"4C4556A4-CC61-44F3-8BED-642DD034D2DA\", \"text\": \"Interview Process\"}]}, {\"guid\": \"89A17160-7CE0-460B-AAC0-E5D34C3D1CC0\", \"text\": \"Culture & Ops\", \"subtopics\": [{\"guid\": \"7CA6AC28-CC46-4290-A2C4-58221AA8DC92\", \"text\": \"Remote Policies\"}, {\"guid\": \"23A9F25C-4DD6-42DA-BEE7-02D542A88B95\", \"text\": \"Performance Reviews\"}]}]}, {\"guid\": \"33B58ECF-87BB-4A55-A1DF-0B9B8BFAB28C\", \"text\": \"Fundraising\", \"subtopics\": [{\"guid\": \"AF86A2B5-24AD-4C5B-9A47-B989B95D7DAB\", \"text\": \"Funding Strategy\", \"subtopics\": [{\"guid\": \"74CDCA7A-4FD5-4582-B3AB-0AD31EC3D9F3\", \"text\": \"Bootstrapping Plan\"}, {\"guid\": \"B8259997-4415-4E28-A22A-F7A7A50C3723\", \"text\": \"VC Pitch Focus\"}, {\"guid\": \"1F1F0714-4563-4A0E-8A23-05A5959F10FB\", \"text\": \"Angel Outreach\"}]}, {\"guid\": \"C088D7C0-536C-4D74-B0F8-411A70715A8F\", \"text\": \"Financial Planning\", \"subtopics\": [{\"guid\": \"0A837281-42C0-454B-80A7-E5D6009200BE\", \"text\": \"Burn Rate\"}, {\"guid\": \"56A17032-929C-4879-AAEC-2AEB56CECE45\", \"text\": \"Runway Management\"}, {\"guid\": \"26737FCB-647C-4919-8C1E-CF04DB82798A\", \"text\": \"Forecasts\"}]}, {\"guid\": \"B2040CFC-9B8A-4A81-AFB2-77ABA252AFD8\", \"text\": \"Investor Relations\", \"subtopics\": [{\"guid\": \"02F5F4D1-6333-491D-8473-7DA8CC17063F\", \"text\": \"Cap Table Management\"}, {\"guid\": \"854288EC-E443-4488-8EEC-E9266B3C764B\", \"text\": \"Demo Day Prep\"}]}]}, {\"guid\": \"00DCEE21-DF78-4994-B54A-719E34711383\", \"text\": \"Go-to-Market\", \"subtopics\": [{\"guid\": \"3F5AA657-3BC4-4A73-A808-76E497A6A350\", \"text\": \"Pricing Model\", \"subtopics\": [{\"guid\": \"AC53DAE8-4833-4A61-B6D6-DC0E3E8EBAC6\", \"text\": \"Subscription Plans\"}, {\"guid\": \"14430046-C744-4BBC-8EDA-563C18645FB1\", \"text\": \"Enterprise Pricing\"}]}, {\"guid\": \"CDF9F7D0-19B0-421D-ABD4-88BBB6FD1A16\", \"text\": \"Sales Strategy\", \"subtopics\": [{\"guid\": \"2909B9F8-6702-4F13-8E0E-4607077D3456\", \"text\": \"ICP Definition\"}, {\"guid\": \"070070AE-E98B-4F62-84EE-78958ED33CFE\", \"text\": \"Pipeline Management\"}, {\"guid\": \"F4E18FB4-CD26-4EDB-B5BC-158BBB526A64\", \"text\": \"Sales Hiring\"}]}, {\"guid\": \"F917AFF5-A2B7-4945-A0CD-E6229A8F5B5E\", \"text\": \"Marketing Plan\", \"subtopics\": [{\"guid\": \"A97358A2-D7DE-49F6-B511-4DAF6FAFB0D4\", \"text\": \"Content Strategy\"}, {\"guid\": \"63711491-91BB-4C68-A723-FCD075536FD1\", \"text\": \"Demand Gen Channels\"}, {\"guid\": \"AAC055E2-6CED-47F1-8B48-5E568858DFBA\", \"text\": \"PR & Partnerships\"}]}]}]}"})
+			set testResult to my handleCommand({"writeFragment", "{\"guid\": \"ba179bfd-6528-47ff-9ea2-88f07b741a08\", \"text\": \"Creating an AI startup\", \"subtopics\": [{\"guid\": \"7d1f6e5f-d76b-4e80-9a0f-f327562b3fb6\", \"text\": \"Vision & Strategy\", \"subtopics\": [{\"guid\": \"9c7a2f49-0ac8-4c9b-99c8-c5b0678d1839\", \"text\": \"Mission and Value\", \"subtopics\": [{\"guid\": \"63eadbaa-fb86-44b9-a770-1bbcf7d12ad1\", \"text\": \"Problem statement\"}, {\"guid\": \"cc649bd4-f57f-4835-8f69-e33f56ebf125\", \"text\": \"Value proposition\"}, {\"guid\": \"ccdb5ce8-e25d-4633-8b89-f052b5f5d034\", \"text\": \"Long term goals\"}]}, {\"guid\": \"1d527fd2-4220-45db-8ecd-9d99c5660204\", \"text\": \"Competitive Positioning\", \"subtopics\": [{\"guid\": \"ec4aad22-060a-4687-bfbc-fea3d3a07571\", \"text\": \"Differentiation pillars\"}, {\"guid\": \"6658209a-76c5-4a30-873b-1431901f36e1\", \"text\": \"Key competitors map\"}, {\"guid\": \"53a5ba03-3305-484d-a90a-fda4e6e4e6c5\", \"text\": \"Barrier strategies\"}]}]}, {\"guid\": \"194fd5de-5d8a-4a2b-abd4-7e4061810daa\", \"text\": \"Product & Tech\", \"subtopics\": [{\"guid\": \"c9fa1ccc-0f43-4157-a619-c1b551323f7b\", \"text\": \"MVP Design\", \"subtopics\": [{\"guid\": \"9a09ec78-dcbd-42ed-ad97-5b2fecd08f7d\", \"text\": \"Core feature set\", \"notes\": {\"text\": \"Some Notes\"}}, {\"guid\": \"4697cf4f-b2b8-4e79-9ccc-b18841a8756e\", \"text\": \"User flows map\", \"links\": [{\"text\": \"label\", \"url\": \"https://example.com\"}]}, {\"guid\": \"0e73917c-32f6-471f-abf3-8e4860fa9420\", \"text\": \"Rapid prototyping\", \"references\": [{\"guid_1\": \"0e73917c-32f6-471f-abf3-8e4860fa9420\", \"guid_2\": \"ccdb5ce8-e25d-4633-8b89-f052b5f5d034\", \"direction\": 1}]}]}]}]"})
 			-- set testResult to my handleCommand({"writeTree", "{\"guid\":\"test-guid\", \"text\":\"Test Topic\", \"level\":0, \"notes\":\"Test notes\", \"subtopics\":[]}"})
 			-- set testResult to my handleCommand({"setProperties", "{\"guid\":\"existing-guid\", \"text\":\"Updated Text\", \"level\":1, \"notes\":\"Updated notes\"}"})
 			return testResult
@@ -3398,33 +3493,47 @@ on doWriteTree(jsonData)
 			return "{ \"error\": \"JSON parsing failed: " & my escapeJSON(errorMsg of parsedData) & "\" }"
 		end if
 		
+		-- Reset mapping caches
+		set guidMapping to {}
+		set pendingReferences to {}
+		set guidMappingDict to NSMutableDictionary's alloc()'s init()
+		
 		tell application "MindManager"
 			-- Create new document or clear existing one
 			if (count of documents) > 0 then
 				tell document 1
-					set name of central topic to topicText of parsedData
-					if topicNotes of parsedData is not "" then
-						set notes of central topic to topicNotes of parsedData
-					end if
+						set name of central topic to topicText of parsedData
+						if topicNotes of parsedData is not "" then
+							set notes of central topic to (topicNotes of parsedData as Unicode text)
+						end if
 					-- Remove existing subtopics
 					delete every subtopic of central topic
 				end tell
 			else
 				make new document
-				tell document 1
-					set name of central topic to topicText of parsedData
-					if topicNotes of parsedData is not "" then
-						set notes of central topic to topicNotes of parsedData
-					end if
-				end tell
+					tell document 1
+						set name of central topic to topicText of parsedData
+						if topicNotes of parsedData is not "" then
+							set notes of central topic to (topicNotes of parsedData as Unicode text)
+						end if
+					end tell
 			end if
 			
+			set rootTopic to central topic of document 1
+			my _registerTopicGuid(topicGuid of parsedData, id of rootTopic)
+			my _queueReferences(topicReferences of parsedData)
+			
 			-- Build the tree structure recursively
-			set result to my buildTreeFromJSON(central topic of document 1, topicSubtopics of parsedData)
+			set result to my buildTreeFromJSON(rootTopic, topicSubtopics of parsedData)
 			if result contains "error" then
 				return result
 			end if
 		end tell
+		
+		set relResult to my _processPendingReferences()
+		if relResult contains "error" then
+			return relResult
+		end if
 		
 		return "{ \"success\": \"Tree written successfully\" }"
 		
@@ -3441,6 +3550,11 @@ on doWriteFragment(jsonData)
 			return "{ \"error\": \"JSON parsing failed: " & my escapeJSON(errorMsg of parsedData) & "\" }"
 		end if
 		
+		-- Reset mapping caches
+		set guidMapping to {}
+		set pendingReferences to {}
+		set guidMappingDict to NSMutableDictionary's alloc()'s init()
+		
 		tell application "MindManager"
 			tell document 1
 				set selItems to selection
@@ -3454,10 +3568,12 @@ on doWriteFragment(jsonData)
 				
 				-- Create the fragment as a subtopic
 				set newSubtopic to make new subtopic at end of subtopics of targetTopic
-				set name of newSubtopic to topicText of parsedData
-				if topicNotes of parsedData is not "" then
-					set notes of newSubtopic to topicNotes of parsedData
-				end if
+					set name of newSubtopic to topicText of parsedData
+					if topicNotes of parsedData is not "" then
+						set notes of newSubtopic to (topicNotes of parsedData as Unicode text)
+					end if
+					my _registerTopicGuid(topicGuid of parsedData, id of newSubtopic)
+					my _queueReferences(topicReferences of parsedData)
 				
 				-- Build subtopics recursively
 				set result to my buildTreeFromJSON(newSubtopic, topicSubtopics of parsedData)
@@ -3466,6 +3582,11 @@ on doWriteFragment(jsonData)
 				end if
 			end tell
 		end tell
+		
+		set relResult to my _processPendingReferences()
+		if relResult contains "error" then
+			return relResult
+		end if
 		
 		return "{ \"success\": \"Fragment written successfully\" }"
 		
@@ -3492,21 +3613,21 @@ on doSetProperties(jsonData)
 			return "{ \"error\": \"Topic with GUID '" & my escapeJSON(targetGuid) & "' not found\" }"
 		end if
 		
-		tell application "MindManager"
-			tell targetTopic
-				if topicText of parsedData is not "" then
-					set name to topicText of parsedData
-				end if
-				if topicNotes of parsedData is not "" then
-					set notes to topicNotes of parsedData
-				end if
-			end tell
+	tell application "MindManager"
+		tell targetTopic
+			if topicText of parsedData is not "" then
+				set name to topicText of parsedData
+			end if
+			if topicNotes of parsedData is not "" then
+				set notes to (topicNotes of parsedData as Unicode text)
+			end if
 		end tell
-		
-		return "{ \"success\": \"Properties updated successfully\" }"
-		
-	on error errMsg number errNum
-		return "{ \"error\": \"Error in doSetProperties: " & my escapeJSON(errMsg) & " (Code: " & errNum & ")\" }"
+	end tell
+	
+	return "{ \"success\": \"Properties updated successfully\" }"
+	
+on error errMsg number errNum
+	return "{ \"error\": \"Error in doSetProperties: " & my escapeJSON(errMsg) & " (Code: " & errNum & ")\" }"
 	end try
 end doSetProperties
 
@@ -3530,10 +3651,12 @@ on buildTreeFromJSON(parentTopic, subtopicsData)
 			tell application "MindManager"
 				tell parentTopic
 					set newSubtopic to make new subtopic at end of subtopics
-					set name of newSubtopic to topicText of parsedSubtopic
-					if topicNotes of parsedSubtopic is not "" then
-						set notes of newSubtopic to topicNotes of parsedSubtopic
-					end if
+						set name of newSubtopic to topicText of parsedSubtopic
+						if topicNotes of parsedSubtopic is not "" then
+							set notes of newSubtopic to (topicNotes of parsedSubtopic as Unicode text)
+						end if
+						my _registerTopicGuid(topicGuid of parsedSubtopic, id of newSubtopic)
+						my _queueReferences(topicReferences of parsedSubtopic)
 				end tell
 			end tell
 			
@@ -3553,6 +3676,108 @@ on buildTreeFromJSON(parentTopic, subtopicsData)
 	end try
 end buildTreeFromJSON
 
+on _registerTopicGuid(originalGuid, mmGuid)
+	if originalGuid is "" then return
+	if mmGuid is missing value then return
+	try
+		set end of guidMapping to {originalGuid, mmGuid}
+		if guidMappingDict is not missing value then
+			(guidMappingDict's setObject:mmGuid forKey:originalGuid)
+		end if
+	on error recordErr number recordErrNum
+		log "Failed to register mapping for GUID " & originalGuid & ": " & (recordErr as text) & " (" & recordErrNum & ")"
+	end try
+end _registerTopicGuid
+
+on _lookupMappedID(originalGuid)
+	if originalGuid is "" then return ""
+	try
+		if guidMappingDict is not missing value then
+			set found to guidMappingDict's objectForKey:originalGuid
+			if found is not missing value then return found as text
+		end if
+	on error
+		-- fall back to linear scan
+	end try
+	repeat with pair in guidMapping
+		try
+			if (item 1 of pair) is originalGuid then return item 2 of pair
+		end try
+	end repeat
+	return ""
+end _lookupMappedID
+
+on _queueReferences(refList)
+	if refList is missing value then return
+	if class of refList is not list then return
+	repeat with refEntry in refList
+		try
+			set refGuid1 to item 1 of refEntry
+		on error
+			set refGuid1 to ""
+		end try
+		try
+			set refGuid2 to item 2 of refEntry
+		on error
+			set refGuid2 to ""
+		end try
+		try
+			set refDir to item 3 of refEntry
+		on error
+			set refDir to 0
+		end try
+		set end of pendingReferences to {refGuid1, refGuid2, refDir}
+	end repeat
+end _queueReferences
+
+on _processPendingReferences()
+	try
+		tell application "MindManager"
+			repeat with refEntry in pendingReferences
+				set refGuid1 to ""
+				set refGuid2 to ""
+				set refDirection to 0
+				try
+					set refGuid1 to item 1 of refEntry
+				end try
+				try
+					set refGuid2 to item 2 of refEntry
+				end try
+				try
+					set refDirection to item 3 of refEntry
+				end try
+				
+				set startID to my _lookupMappedID(refGuid1)
+				set endID to my _lookupMappedID(refGuid2)
+				if startID is "" or endID is "" then
+					log "Skipping relationship; missing mapped IDs for " & refGuid1 & " or " & refGuid2
+				else
+					set t1 to my _findTopicByID(startID)
+					set t2 to my _findTopicByID(endID)
+					if t1 is not missing value and t2 is not missing value then
+						try
+							set dirInt to 0
+							try
+								set dirInt to refDirection as integer
+							end try
+							if dirInt is -1 then
+								make new relationship with properties {{starting location:t2, ending location:t1}}
+							else
+								make new relationship with properties {{starting location:t1, ending location:t2}}
+							end if
+						on error relErr number relErrNum
+							log "Failed to create relationship for " & refGuid1 & " -> " & refGuid2 & ": " & (relErr as text) & " (" & relErrNum & ")"
+						end try
+					end if
+				end if
+			end repeat
+		end tell
+		return "success"
+	on error errMsg number errNum
+		return "{ \"error\": \"Error creating relationships: " & my escapeJSON(errMsg) & " (Code: " & errNum & ")\" }"
+	end try
+end _processPendingReferences
+
 on parseTopicJSON(jsonInput)
 	-- Parse JSON topic data into a normalized record using Foundation
 	try
@@ -3569,24 +3794,37 @@ on parseTopicJSON(jsonInput)
 			set parsedObject to (NSJSONSerialization's JSONObjectWithData:jsonData options:0 |error|:(missing value))
 			if parsedObject is missing value then
 				set errorText to "Unable to parse JSON payload."
-				return {errorStatus:true, errorMsg:errorText, topicGuid:"", topicText:"", topicLevel:0, topicNotes:"", topicSubtopics:{}}
+				return {errorStatus:true, errorMsg:errorText, topicGuid:"", topicText:"", topicLevel:0, topicNotes:"", topicReferences:{}, topicSubtopics:{}}
 			end if
 			
 			if ((parsedObject's isKindOfClass:NSDictionary) as boolean) is false then
-			return {errorStatus:true, errorMsg:"JSON root is not an object.", topicGuid:"", topicText:"", topicLevel:0, topicNotes:"", topicSubtopics:{}}
+			return {errorStatus:true, errorMsg:"JSON root is not an object.", topicGuid:"", topicText:"", topicLevel:0, topicNotes:"", topicReferences:{}, topicSubtopics:{}}
 		end if
 		
 		return my _dictionaryToTopicRecord(parsedObject)
 		
 	on error errMsg number errNum
-		return {errorStatus:true, errorMsg:"JSON parsing error: " & errMsg & " (Code: " & errNum & ")", topicGuid:"", topicText:"", topicLevel:0, topicNotes:"", topicSubtopics:{}}
+		return {errorStatus:true, errorMsg:"JSON parsing error: " & errMsg & " (Code: " & errNum & ")", topicGuid:"", topicText:"", topicLevel:0, topicNotes:"", topicReferences:{}, topicSubtopics:{}}
 	end try
 end parseTopicJSON
 
 on _dictionaryToTopicRecord(topicDict)
 	set topicGuid to my _coerceToText((topicDict's objectForKey_("guid")))
 	set topicText to my _coerceToText((topicDict's objectForKey_("text")))
-	set topicNotes to my _coerceToText((topicDict's objectForKey_("notes")))
+	
+	-- notes can be either a plain string or an object with a "text" field; normalize to plain text
+	set rawNotes to (topicDict's objectForKey_("notes"))
+	set topicNotes to ""
+	if rawNotes is not missing value then
+		try
+			if ((rawNotes's isKindOfClass:NSString) as boolean) is true then
+				set topicNotes to my _coerceToText(rawNotes)
+			else if ((rawNotes's isKindOfClass:NSDictionary) as boolean) is true then
+				set nestedNote to (rawNotes's objectForKey_("text"))
+				set topicNotes to my _coerceToText(nestedNote)
+			end if
+		end try
+	end if
 	
 	set rawLevel to (topicDict's objectForKey_("level"))
 	set topicLevel to 0
@@ -3596,6 +3834,36 @@ on _dictionaryToTopicRecord(topicDict)
 				try
 					set topicLevel to rawLevel as integer
 				end try
+			end if
+		end try
+	end if
+	
+	-- Collect references for later relationship creation
+	set referenceRecords to {}
+	set rawReferences to (topicDict's objectForKey_("references"))
+	if rawReferences is not missing value then
+		try
+			if ((rawReferences's isKindOfClass:NSArray) as boolean) is true then
+				set referencesCount to ((rawReferences's |count|()) as integer)
+				if referencesCount > 0 then
+					repeat with i from 0 to (referencesCount - 1)
+						set refDict to (rawReferences's objectAtIndex:i)
+						if ((refDict's isKindOfClass:NSDictionary) as boolean) is true then
+							set refGuid1 to my _coerceToText((refDict's objectForKey_("guid_1")))
+							set refGuid2 to my _coerceToText((refDict's objectForKey_("guid_2")))
+							set rawDirection to (refDict's objectForKey_("direction"))
+							set refDirection to 0
+							if rawDirection is not missing value then
+								try
+									if ((rawDirection's isKindOfClass:NSNull) as boolean) is false then
+										set refDirection to rawDirection as integer
+									end if
+								end try
+							end if
+							set end of referenceRecords to {refGuid1, refGuid2, refDirection}
+						end if
+					end repeat
+				end if
 			end if
 		end try
 	end if
@@ -3618,7 +3886,7 @@ on _dictionaryToTopicRecord(topicDict)
 		end try
 	end if
 	
-	return {errorStatus:false, errorMsg:"", topicGuid:topicGuid, topicText:topicText, topicLevel:topicLevel, topicNotes:topicNotes, topicSubtopics:subtopicRecords}
+	return {errorStatus:false, errorMsg:"", topicGuid:topicGuid, topicText:topicText, topicLevel:topicLevel, topicNotes:topicNotes, topicReferences:referenceRecords, topicSubtopics:subtopicRecords}
 end _dictionaryToTopicRecord
 
 on _coerceToText(valueToCoerce)
@@ -4471,21 +4739,21 @@ class MindmapDocument:
                 done={},
                 done_global=done_global)
 
-        # Create relationships between topics
-        for reference in relationships:
-            object1_guids = done_global[reference.guid_1]
-            object2_guids = done_global[reference.guid_2]
-            for object1_guid in object1_guids:
-                for object2_guid in object2_guids:
-                    self.mindm.add_relationship(object1_guid, object2_guid, reference.label)
+            # Create relationships between topics
+            for reference in relationships:
+                object1_guids = done_global[reference.guid_1]
+                object2_guids = done_global[reference.guid_2]
+                for object1_guid in object1_guids:
+                    for object2_guid in object2_guids:
+                        self.mindm.add_relationship(object1_guid, object2_guid, reference.label)
 
-        # Create topic links
-        for link in links:
-            object1_guids = done_global[link.guid_1]
-            object2_guids = done_global[link.guid_2]
-            for object1_guid in object1_guids:
-                for object2_guid in object2_guids:
-                    self.mindm.add_topic_link(object1_guid, object2_guid, link.label)
+            # Create topic links
+            for link in links:
+                object1_guids = done_global[link.guid_1]
+                object2_guids = done_global[link.guid_2]
+                for object1_guid in object1_guids:
+                    for object2_guid in object2_guids:
+                        self.mindm.add_topic_link(object1_guid, object2_guid, link.label)
 
     def create_mindmap_and_finalize(self):
         """
@@ -5011,7 +5279,19 @@ def deserialize_mermaid_full(mermaid_text: str, guid_mapping: dict) -> MindmapTo
         fallback_text = bracket_part.strip()[1:-1]
         try:
             attrs = json.loads(json_part)
+        except json.JSONDecodeError as e:
+            if "Invalid \\escape" in e.msg:
+                repaired_json = re.sub(r'(?<!\\)\\(?![\\\"/bfnrtu])', r'\\\\', json_part)
+                try:
+                    attrs = json.loads(repaired_json)
+                except Exception as inner:
+                    print(f"Failed to parse Mermaid JSON metadata even after repairing backslashes: {inner} (original: {json_part!r})")
+                    attrs = {}
+            else:
+                print(f"Failed to parse Mermaid JSON metadata: {e.msg} at pos {e.pos} in {json_part!r}")
+                attrs = {}
         except Exception as e:
+            print(f"Unexpected error while parsing Mermaid JSON metadata {json_part!r}: {e}")
             attrs = {}
         if "id" in attrs:
             node_guid = restore_guid(attrs["id"])
