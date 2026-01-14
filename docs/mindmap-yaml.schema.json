@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mindm Mindmap YAML",
+  "description": "Schema for the yaml export produced by mindmap.serialization.serialize_object with GUIDs mapped to numeric IDs.",
+  "$ref": "mindmap-json.schema.json"
+}

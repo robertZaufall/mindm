@@ -18,7 +18,7 @@ ul{margin-block-start:8px}
 </body></html>
 """
 
-def generate_html(content, guid):
+def generate_html(content, guid, open_file = False):
     folder_path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "docs")
     if not os.path.exists(folder_path): os.makedirs(folder_path)
     with open(os.path.join(folder_path, f"{guid}.md"), 'w', encoding="utf-8") as f:
@@ -27,16 +27,17 @@ def generate_html(content, guid):
     file_path = os.path.join(folder_path, f"{guid}.html")
     with open(file_path, 'w', encoding="utf-8") as f:
         f.write(html)
-    if sys.platform.startswith('darwin'):
-        os.system(f"open {file_path}")
-    elif sys.platform.startswith('win'):
-        import subprocess
-        subprocess.Popen(f'cmd /k start explorer.exe "{file_path}"', shell=False)
+    if open_file:
+        if sys.platform.startswith('darwin'):
+            os.system(f"open {file_path}")
+        elif sys.platform.startswith('win'):
+            import subprocess
+            subprocess.Popen(f'cmd /k start explorer.exe "{file_path}"', shell=False)
 
-document = mm.MindmapDocument()
+document = mm.MindmapDocument(macos_access='applescript')
 document.get_mindmap(mode='content')
 
 md = mms.serialize_mindmap_markdown(document.mindmap)
 
 guid = uuid.uuid4()
-generate_html(md, guid)
+generate_html(md, guid, open_file=True)

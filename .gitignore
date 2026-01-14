@@ -12,5 +12,5 @@ dist/
 build/
 out/
 docs/_build/
-examples/docs/
 ~$Test_DOM.mmap.~$lock
+examples/export/docs/

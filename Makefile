@@ -1,14 +1,16 @@
-.PHONY: clean build update-version docs
+.PHONY: clean build update-version docs test smoke coverage
+.PHONY: coverage-smoke
 
-LLMS_INCLUDE   = pyproject.toml,LICENSE,README.md,mindm/*,mindmap/*,examples/*
-LLMS_EXCLUDE   = mindm/as/*.md,llms.txt,update_version.py,examples/docs,examples/Test_DOM.*,mindm/__pycache__,mindmap/__pycache__,mindm/.DS_Store,mindmap/.DS_Store,mindm/as/*.scpt
+LLMS_INCLUDE   = pyproject.toml,LICENSE,README.md,mindm/*,mindmap/*,examples/*,skills/*
+LLMS_EXCLUDE   = mindm/as/*.md,llms.txt,update_version.py,examples/docs,examples/Test_DOM.*,mindm/__pycache__,mindmap/__pycache__,mindm/.DS_Store,mindm/as/*.scpt,mindm/as/MindManager.sdef.md
 
 # Default target
-all: clean update-version build install llms docs
+all: clean update-version build install test llms docs
 
 # Clean the dist folder
 clean:
 	rm -rf dist/*
+	find . -name ".DS_Store" -print -delete
 
 # Update version in pyproject.toml (increment last digit)
 update-version:
@@ -32,6 +34,22 @@ docs:
 	cd docs && make clean html
 	cd ..
 
+# Run tests
+test:
+	python -m pytest
+
+# Run MindManager smoke tests (requires running instance)
+smoke:
+	MINDM_SMOKE=1 python -m pytest -q
+
+# Measure test coverage
+coverage:
+	python -m pytest -q --disable-warnings --cov=mindmap --cov=mindm --cov-report=term-missing:skip-covered
+
+# Measure coverage including MindManager smoke tests
+coverage-smoke:
+	MINDM_SMOKE=1 python -m pytest -q --disable-warnings --cov=mindmap --cov=mindm --cov-report=term-missing:skip-covered
+
 # Create a release on Github
 release:
 	@if [ -z "$$VERSION" ]; then \
@@ -53,5 +71,9 @@ help:
 	@echo "  install        - Install the package in editable mode"
 	@echo "  llms           - Generate llms documentation"
 	@echo "  docs           - Generate HTML documentation with clean option"
+	@echo "  test           - Run test suite with pytest"
+	@echo "  smoke          - Run MindManager smoke tests (requires MINDM_SMOKE=1)"
+	@echo "  coverage       - Run tests with coverage report"
+	@echo "  coverage-smoke - Run coverage including MindManager smoke tests"
 	@echo "  release        - Create a release on GitHub"
 	@echo "  help           - Show this help message"

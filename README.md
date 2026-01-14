@@ -10,6 +10,8 @@ Python library for interacting with locally installed MindManager™ on Windows 
 - Direct automation hooks for MindManager via platform-specific connectors in `mindm/`
 - High-level document model, serialization helpers, and exporters in `mindmap/`
 - YAML, JSON, and Mermaid serialization/deserialization helpers for round-tripping maps
+- CLI export via `mindm-export` (HTML or data-only outputs)
+- Codex skill in `skills/mindm-export` (packaged as `dist/mindm-export.skill`)
 - Sphinx documentation plus runnable snippets under `examples/`
 
 ## Project Layout
@@ -18,8 +20,11 @@ Python library for interacting with locally installed MindManager™ on Windows 
 mindm/
 ├── mindm/        # Platform connectors (MindManager COM, AppleScript, etc.)
 ├── mindmap/      # MindmapDocument model + serialization helpers
+├── mindmap/export.py  # CLI export entrypoint (mindm-export)
+├── skills/       # Codex skills (mindm-export)
 ├── docs/         # Sphinx documentation (make docs → docs/_build/html)
 ├── examples/     # Usage snippets / sanity scripts
+├── dist/         # Build artifacts and packaged skill files
 ```
 
 ## Installation
@@ -146,6 +151,26 @@ mindmap
 mindmap_root = mms.deserialize_mermaid_simple(mermaid)
 ```
 
+### CLI export
+
+Run the console script (installed via pip or uvx):
+
+```bash
+mindm-export --type mermaid_html --open
+```
+
+Run from source without installing the package:
+
+```bash
+python -m mindmap.export --type json --output /tmp/mindmap.json
+```
+
+### Codex skill
+
+The Codex skill lives at `skills/mindm-export` and is packaged as
+`dist/mindm-export.skill` for agent use. It documents the CLI flags and
+recommended `uvx` one-liners.
+
 ## Platform Specific Functionality
 
 | Platform | Supported                                                                 | Not Supported                                  |
@@ -159,7 +184,7 @@ mindmap_root = mms.deserialize_mermaid_simple(mermaid)
 - `make build` (or `python -m build`) to create wheels and sdists in `dist/`
 - `make docs` to rebuild the HTML documentation under `docs/_build/html`
 - `pytest` for unit/integration coverage (add tests in `tests/` or `examples/`)
-- `python examples/test.py` for a live smoke run against a connected MindManager instance
+- `MINDM_SMOKE=1 pytest -q` for a live smoke run against a connected MindManager instance
 
 See `make help` for additional automation such as version bumps (`make update-version`) or GitHub releases.
 

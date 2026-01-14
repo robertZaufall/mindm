@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mindm Mindmap JSON",
+  "description": "Schema for the json export produced by mindmap.serialization.serialize_object (GUIDs mapped to numeric IDs). Empty fields are omitted; RTF is omitted by default.",
+  "$ref": "#/$defs/MindmapTopic",
+  "$defs": {
+    "MindmapTopic": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "text": {
+          "type": "string"
+        },
+        "rtf": {
+          "type": "string"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MindmapLink"
+          }
+        },
+        "image": {
+          "$ref": "#/$defs/MindmapImage"
+        },
+        "icons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MindmapIcon"
+          }
+        },
+        "notes": {
+          "$ref": "#/$defs/MindmapNotes"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MindmapTag"
+          }
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MindmapReference"
+          }
+        },
+        "subtopics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MindmapTopic"
+          }
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "MindmapLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "text": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "MindmapImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "MindmapNotes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "xhtml": {
+          "type": "string"
+        },
+        "rtf": {
+          "type": "string"
+        }
+      }
+    },
+    "MindmapIcon": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "is_stock_icon": {
+          "type": "boolean"
+        },
+        "index": {
+          "type": "integer"
+        },
+        "signature": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        }
+      }
+    },
+    "MindmapTag": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "MindmapReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id_1": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "id_2": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "direction": {
+          "type": "integer"
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

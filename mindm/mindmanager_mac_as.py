@@ -226,11 +226,14 @@ class Mindmanager:
         result = self._read("getTree")
         return result[0] if result else None
 
-    def get_mindmaptopic_from_topic(self, topic_id) -> 'MindmapTopic':
+    def get_mindmaptopic_from_topic(self, topic) -> 'MindmapTopic':
         """
         Returns a MindmapTopic with guid, text, rtf and level,
         all retrieved via a single AppleScript call.
         """
+        if not topic:
+            return None
+        topic_id = topic.guid
         if not topic_id:
             return None
 
@@ -434,7 +437,10 @@ class Mindmanager:
         result = self._read("getSelection")
         return result
 
-    def get_level_from_topic(self, topic_id):
+    def get_level_from_topic(self, topic):
+        if not topic:
+            return None
+        topic_id = topic.guid
         if not topic_id:
             return None
         script = f'''

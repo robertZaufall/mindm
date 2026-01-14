@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mindm"
-version = "0.0.5.4"
+version = "0.0.6.1"
 authors = [
   { name="Robert Zaufall" },
 ]
@@ -32,9 +32,13 @@ text = "MIT"
 Homepage = "https://github.com/robertZaufall/mindm"
 Issues = "https://github.com/robertZaufall/mindm/issues"
 
+[project.scripts]
+mindm-export = "mindmap.export:main"
+
 [project.optional-dependencies]
 dev = [
   "pytest>=7.0",
+  "pytest-cov",
   "black",
   "flake8",
   "gitingest",
@@ -58,3 +62,18 @@ namespaces = false  # to disable scanning PEP 420 namespaces
 
 [tool.setuptools.package-data]
 mindm = ["as/*.scpt"]
+
+[tool.coverage.run]
+branch = true
+omit = [
+  "mindm/__init__.py",
+  "mindmap/__init__.py",
+  "mindm/mindmanager.py",
+  "mindm/mindmanager_mac.py",
+  "mindm/mindmanager_mac_as.py",
+  "mindm/mindmanager_win.py"
+]
+
+[tool.coverage.report]
+skip_covered = true
+show_missing = true
