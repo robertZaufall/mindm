@@ -12,5 +12,6 @@ dist/
 build/
 out/
 docs/_build/
+mindm/skills/*.skill
 ~$Test_DOM.mmap.~$lock
 examples/export/docs/

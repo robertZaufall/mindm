@@ -12,7 +12,7 @@ Python library for interacting with locally installed MindManager™ on Windows 
 - YAML, JSON, and Mermaid serialization/deserialization helpers for round-tripping maps
 - CLI export via `mindm-export` (HTML or data-only outputs)
 - CLI mindmap operations via `mindm-mindmap` (JSON, Mermaid, creation)
-- Codex skills in `skills/mindm-export` and `skills/mindm-mindmap` (packaged into `dist/`)
+- Codex skills in `skills/mindm-export` and `skills/mindm-mindmap` (package with `make skills` or `make build`)
 - Sphinx documentation plus runnable snippets under `examples/`
 
 ## Project Layout
@@ -26,7 +26,8 @@ mindm/
 ├── skills/       # Codex skills (mindm-export, mindm-mindmap)
 ├── docs/         # Sphinx documentation (make docs → docs/_build/html)
 ├── examples/     # Usage snippets / sanity scripts
-├── dist/         # Build artifacts and packaged skill files
+├── dist/         # Build artifacts (wheels/sdists)
+├── mindm/skills/ # Packaged skill bundles included in distributions
 ```
 
 ## Installation
@@ -190,11 +191,12 @@ mindm-mindmap serialize-mermaid --mode full | mindm-mindmap create-from-mermaid
 
 ### Codex skills
 
-Skill packages live under `skills/` and are packaged into `.skill` files in
-`dist/` for agent use. Current skills:
+Skill packages live under `skills/` and are packaged into `.skill` files under
+`mindm/skills/` so they are included in wheels and sdists. Run `make skills`
+(or `python package_skills.py`) to generate the bundles. Current skills:
 
-- `skills/mindm-export` → `dist/mindm-export.skill`
-- `skills/mindm-mindmap` → `dist/mindm-mindmap.skill`
+- `skills/mindm-export` → `mindm/skills/mindm-export.skill`
+- `skills/mindm-mindmap` → `mindm/skills/mindm-mindmap.skill`
 
 ## Platform Specific Functionality
 
@@ -206,7 +208,8 @@ Skill packages live under `skills/` and are packaged into `.skill` files in
 ## Development Workflow
 
 - `pip install -e ".[dev]"` to get linting, testing, and docs dependencies
-- `make build` (or `python -m build`) to create wheels and sdists in `dist/`
+- `make build` to create wheels/sdists in `dist/` and `.skill` bundles in `mindm/skills/`
+- `python -m build` to create wheels and sdists only
 - `make docs` to rebuild the HTML documentation under `docs/_build/html`
 - `pytest` for unit/integration coverage (add tests in `tests/` or `examples/`)
 - `MINDM_SMOKE=1 pytest -q` for a live smoke run against a connected MindManager instance

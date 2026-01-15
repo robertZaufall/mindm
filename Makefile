@@ -1,15 +1,16 @@
-.PHONY: clean build update-version docs test smoke coverage
+.PHONY: clean build skills update-version docs test smoke coverage
 .PHONY: coverage-smoke
 
 LLMS_INCLUDE   = pyproject.toml,LICENSE,README.md,mindm/*,mindmap/*,examples/*,skills/*
-LLMS_EXCLUDE   = mindm/as/*.md,llms.txt,update_version.py,examples/docs,examples/Test_DOM.*,mindm/__pycache__,mindmap/__pycache__,mindm/.DS_Store,mindm/as/*.scpt,mindm/as/MindManager.sdef.md
+LLMS_EXCLUDE   = mindm/as/*.md,llms.txt,update_version.py,examples/docs,examples/Test_DOM.*,mindm/__pycache__,mindmap/__pycache__,mindm/.DS_Store,mindm/as/*.scpt,mindm/as/MindManager.sdef.md,mindm/skills
 
 # Default target
-all: clean update-version build install test llms docs
+all: clean update-version build install skills test llms docs
 
 # Clean the dist folder
 clean:
 	rm -rf dist/*
+	rm -f mindm/skills/*.skill
 	find . -name ".DS_Store" -print -delete
 
 # Update version in pyproject.toml (increment last digit)
@@ -17,8 +18,12 @@ update-version:
 	@python update_version.py
 
 # Build the package
-build:
+build: skills
 	python -m build
+
+# Package skills into .skill files
+skills:
+	python package_skills.py
 
 # Install the package
 install:
@@ -68,6 +73,7 @@ help:
 	@echo "  clean          - Remove contents of dist folder"
 	@echo "  update-version - Increment build number in pyproject.toml"
 	@echo "  build          - Build the package with python -m build"
+	@echo "  skills         - Package skills into .skill files in mindm/skills/"
 	@echo "  install        - Install the package in editable mode"
 	@echo "  llms           - Generate llms documentation"
 	@echo "  docs           - Generate HTML documentation with clean option"
