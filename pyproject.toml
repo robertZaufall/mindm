@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mindm"
-version = "0.0.6.1"
+version = "0.0.7.1"
 authors = [
   { name="Robert Zaufall" },
 ]
@@ -34,6 +34,7 @@ Issues = "https://github.com/robertZaufall/mindm/issues"
 
 [project.scripts]
 mindm-export = "mindmap.export:main"
+mindm-mindmap = "mindmap.actions:main"
 
 [project.optional-dependencies]
 dev = [

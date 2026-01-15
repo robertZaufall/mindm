@@ -8,4 +8,5 @@ mindmap package
    mindmap.serialization
    mindmap.helpers
    mindmap.export
+   mindmap.actions
    mindmap.import

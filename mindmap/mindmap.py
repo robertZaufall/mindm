@@ -221,25 +221,37 @@ class MindmapDocument:
             max_topic_level = self.get_max_topic_level(subtopic, max_topic_level, visited)
         return max_topic_level
 
-    def get_parent_topic(self, topic):
+    def get_parent_topic(self, topic, visited=None):
         """
         Retrieve the parent topic for a given MindManager topic.
 
         Args:
             topic: The current topic from which to get the parent.
+            visited (set, optional): Track visited GUIDs to avoid cycles.
 
         Returns:
             MindmapTopic or None: The parent topic wrapped as a MindmapTopic, or None if at the root.
         """
+        if visited is None:
+            visited = set()
+        topic_guid = self.mindm.get_guid_from_topic(topic)
+        if topic_guid in visited:
+            return None
+        visited.add(topic_guid)
         topic_level = self.mindm.get_level_from_topic(topic)
         if topic_level == 0:
             return None
         parent_topic = self.mindm.get_parent_from_topic(topic)
+        if parent_topic is None:
+            return None
+        parent_guid = self.mindm.get_guid_from_topic(parent_topic)
+        if parent_guid == topic_guid:
+            return None
         parent_mindmap_topic = MindmapTopic(
-            guid=self.mindm.get_guid_from_topic(parent_topic),
+            guid=parent_guid,
             text=self.mindm.get_text_from_topic(parent_topic), 
             level=self.mindm.get_level_from_topic(parent_topic),
-            parent=self.get_parent_topic(parent_topic),
+            parent=self.get_parent_topic(parent_topic, visited),
         )
         return parent_mindmap_topic
 

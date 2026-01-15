@@ -11,7 +11,8 @@ Python library for interacting with locally installed MindManager™ on Windows 
 - High-level document model, serialization helpers, and exporters in `mindmap/`
 - YAML, JSON, and Mermaid serialization/deserialization helpers for round-tripping maps
 - CLI export via `mindm-export` (HTML or data-only outputs)
-- Codex skill in `skills/mindm-export` (packaged as `dist/mindm-export.skill`)
+- CLI mindmap operations via `mindm-mindmap` (JSON, Mermaid, creation)
+- Codex skills in `skills/mindm-export` and `skills/mindm-mindmap` (packaged into `dist/`)
 - Sphinx documentation plus runnable snippets under `examples/`
 
 ## Project Layout
@@ -21,7 +22,8 @@ mindm/
 ├── mindm/        # Platform connectors (MindManager COM, AppleScript, etc.)
 ├── mindmap/      # MindmapDocument model + serialization helpers
 ├── mindmap/export.py  # CLI export entrypoint (mindm-export)
-├── skills/       # Codex skills (mindm-export)
+├── mindmap/actions.py  # CLI mindmap entrypoint (mindm-mindmap)
+├── skills/       # Codex skills (mindm-export, mindm-mindmap)
 ├── docs/         # Sphinx documentation (make docs → docs/_build/html)
 ├── examples/     # Usage snippets / sanity scripts
 ├── dist/         # Build artifacts and packaged skill files
@@ -165,11 +167,34 @@ Run from source without installing the package:
 python -m mindmap.export --type json --output /tmp/mindmap.json
 ```
 
-### Codex skill
+### CLI mindmap
 
-The Codex skill lives at `skills/mindm-export` and is packaged as
-`dist/mindm-export.skill` for agent use. It documents the CLI flags and
-recommended `uvx` one-liners.
+Query the current map or serialize it:
+
+```bash
+mindm-mindmap get-mindmap --mode content
+mindm-mindmap serialize-mermaid --id-only
+```
+
+Create a map from Mermaid:
+
+```bash
+mindm-mindmap create-from-mermaid --input /tmp/map.mmd
+```
+
+Round-trip test (serialize → create):
+
+```bash
+mindm-mindmap serialize-mermaid --mode full | mindm-mindmap create-from-mermaid
+```
+
+### Codex skills
+
+Skill packages live under `skills/` and are packaged into `.skill` files in
+`dist/` for agent use. Current skills:
+
+- `skills/mindm-export` → `dist/mindm-export.skill`
+- `skills/mindm-mindmap` → `dist/mindm-mindmap.skill`
 
 ## Platform Specific Functionality
 

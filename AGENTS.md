@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-`mindm/` hosts the platform connectors (`mindmanager.py`, `mindmanager_win.py`, `mindmanager_mac*.py`) with direct MindManager automation hooks, while `mindmap/` provides the higher-level document model plus serialization helpers (`serialization.py`, `export.py`, `import.py`). Codex skills live in `skills/` (see `skills/mindm-export`) and are packaged to `dist/`. Reference material lives in `docs/` (Sphinx) and publishes via `docs/_build/html`. Usage snippets and sanity scripts sit in `examples/`. Tweak version bumps through `update_version.py`, and manage builds with the root `Makefile`.
+`mindm/` hosts the platform connectors (`mindmanager.py`, `mindmanager_win.py`, `mindmanager_mac*.py`) with direct MindManager automation hooks, while `mindmap/` provides the higher-level document model plus serialization helpers (`serialization.py`, `export.py`, `actions.py`, `import.py`). Codex skills live in `skills/` (see `skills/mindm-export`, `skills/mindm-mindmap`) and are packaged to `dist/`. Reference material lives in `docs/` (Sphinx) and publishes via `docs/_build/html`. Usage snippets and sanity scripts sit in `examples/`. Tweak version bumps through `update_version.py`, and manage builds with the root `Makefile`.
 
 ## Build, Test, and Development Commands
 - `pip install -e ".[dev]"`: install editable package with dev tools needed for linting, docs, and tests.  
