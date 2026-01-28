@@ -5,6 +5,8 @@ Python library for interacting with locally installed MindManager™ on Windows 
 [![PyPI version](https://img.shields.io/pypi/v/mindm.svg)](https://pypi.org/project/mindm/)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://robertzaufall.github.io/mindm/)
 
+> **Claude Code / Codex Skill available:** For AI-assisted MindManager automation with Claude Code, see the [mindm-skill](https://github.com/robertZaufall/mindm-skill) repository.
+
 ## Features
 
 - Direct automation hooks for MindManager via platform-specific connectors in `mindm/`
@@ -12,7 +14,6 @@ Python library for interacting with locally installed MindManager™ on Windows 
 - YAML, JSON, and Mermaid serialization/deserialization helpers for round-tripping maps
 - CLI export via `mindm-export` (HTML or data-only outputs)
 - CLI mindmap operations via `mindm-mindmap` (JSON, Mermaid, creation)
-- Codex skills in `skills/mindm-export` and `skills/mindm-mindmap` (package with `make skills`; `make build` runs it)
 - Sphinx documentation plus runnable snippets under `examples/`
 
 ## Project Layout
@@ -23,11 +24,9 @@ mindm/
 ├── mindmap/      # MindmapDocument model + serialization helpers
 ├── mindmap/export.py  # CLI export entrypoint (mindm-export)
 ├── mindmap/actions.py  # CLI mindmap entrypoint (mindm-mindmap)
-├── skills/       # Codex skills (mindm-export, mindm-mindmap)
 ├── docs/         # Sphinx documentation (make docs → docs/_build/html)
 ├── examples/     # Usage snippets / sanity scripts
 ├── dist/         # Build artifacts (wheels/sdists)
-├── mindm/skills/ # Packaged skill bundles included in distributions
 ```
 
 ## Installation
@@ -189,15 +188,6 @@ Round-trip test (serialize → create):
 mindm-mindmap serialize-mermaid --mode full | mindm-mindmap create-from-mermaid
 ```
 
-### Codex skills
-
-Skill packages live under `skills/` and are packaged into `.skill` files under
-`mindm/skills/` so they are included in wheels and sdists. Run `make skills`
-(or `python package_skills.py`) to generate the bundles. Current skills:
-
-- `skills/mindm-export` → `mindm/skills/mindm-export.skill`
-- `skills/mindm-mindmap` → `mindm/skills/mindm-mindmap.skill`
-
 ## Platform Specific Functionality
 
 | Platform | Supported                                                                 | Not Supported                                  |
@@ -208,8 +198,7 @@ Skill packages live under `skills/` and are packaged into `.skill` files under
 ## Development Workflow
 
 - `pip install -e ".[dev]"` to get linting, testing, and docs dependencies
-- `make skills` to package `.skill` bundles into `mindm/skills/`
-- `make build` to create wheels/sdists in `dist/` (also runs `make skills`; requires `build`, included in `.[dev]`)
+- `make build` to create wheels/sdists in `dist/` (requires `build`, included in `.[dev]`)
 - `python -m build` to create wheels and sdists only (requires `build`)
 - `make docs` to rebuild the HTML documentation under `docs/_build/html`
 - `pytest` for unit/integration coverage (add tests in `tests/` or `examples/`)

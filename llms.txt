@@ -35,24 +35,14 @@ Directory structure:
     │   └── as/
     │       ├── read.applescript
     │       └── write.applescript
-    ├── mindmap/
-    │   ├── __init__.py
-    │   ├── actions.py
-    │   ├── export.py
-    │   ├── helpers.py
-    │   ├── import.py
-    │   ├── mindmap.py
-    │   └── serialization.py
-    └── skills/
-        ├── mindm-export/
-        │   ├── SKILL.md
-        │   └── references/
-        │       └── cli.md
-        └── mindm-mindmap/
-            ├── SKILL.md
-            └── references/
-                ├── cli.md
-                └── mermaid.md
+    └── mindmap/
+        ├── __init__.py
+        ├── actions.py
+        ├── export.py
+        ├── helpers.py
+        ├── import.py
+        ├── mindmap.py
+        └── serialization.py
 
 ================================================
 File: README.md
@@ -64,6 +54,8 @@ Python library for interacting with locally installed MindManager™ on Windows 
 [![PyPI version](https://img.shields.io/pypi/v/mindm.svg)](https://pypi.org/project/mindm/)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://robertzaufall.github.io/mindm/)
 
+> **Claude Code / Codex Skill available:** For AI-assisted MindManager automation with Claude Code, see the [mindm-skill](https://github.com/robertZaufall/mindm-skill) repository.
+
 ## Features
 
 - Direct automation hooks for MindManager via platform-specific connectors in `mindm/`
@@ -71,7 +63,6 @@ Python library for interacting with locally installed MindManager™ on Windows 
 - YAML, JSON, and Mermaid serialization/deserialization helpers for round-tripping maps
 - CLI export via `mindm-export` (HTML or data-only outputs)
 - CLI mindmap operations via `mindm-mindmap` (JSON, Mermaid, creation)
-- Codex skills in `skills/mindm-export` and `skills/mindm-mindmap` (package with `make skills` or `make build`)
 - Sphinx documentation plus runnable snippets under `examples/`
 
 ## Project Layout
@@ -82,11 +73,9 @@ mindm/
 ├── mindmap/      # MindmapDocument model + serialization helpers
 ├── mindmap/export.py  # CLI export entrypoint (mindm-export)
 ├── mindmap/actions.py  # CLI mindmap entrypoint (mindm-mindmap)
-├── skills/       # Codex skills (mindm-export, mindm-mindmap)
 ├── docs/         # Sphinx documentation (make docs → docs/_build/html)
 ├── examples/     # Usage snippets / sanity scripts
 ├── dist/         # Build artifacts (wheels/sdists)
-├── mindm/skills/ # Packaged skill bundles included in distributions
 ```
 
 ## Installation
@@ -248,15 +237,6 @@ Round-trip test (serialize → create):
 mindm-mindmap serialize-mermaid --mode full | mindm-mindmap create-from-mermaid
 ```
 
-### Codex skills
-
-Skill packages live under `skills/` and are packaged into `.skill` files under
-`mindm/skills/` so they are included in wheels and sdists. Run `make skills`
-(or `python package_skills.py`) to generate the bundles. Current skills:
-
-- `skills/mindm-export` → `mindm/skills/mindm-export.skill`
-- `skills/mindm-mindmap` → `mindm/skills/mindm-mindmap.skill`
-
 ## Platform Specific Functionality
 
 | Platform | Supported                                                                 | Not Supported                                  |
@@ -267,8 +247,8 @@ Skill packages live under `skills/` and are packaged into `.skill` files under
 ## Development Workflow
 
 - `pip install -e ".[dev]"` to get linting, testing, and docs dependencies
-- `make build` to create wheels/sdists in `dist/` and `.skill` bundles in `mindm/skills/`
-- `python -m build` to create wheels and sdists only
+- `make build` to create wheels/sdists in `dist/` (requires `build`, included in `.[dev]`)
+- `python -m build` to create wheels and sdists only (requires `build`)
 - `make docs` to rebuild the HTML documentation under `docs/_build/html`
 - `pytest` for unit/integration coverage (add tests in `tests/` or `examples/`)
 - `MINDM_SMOKE=1 pytest -q` for a live smoke run against a connected MindManager instance
@@ -287,7 +267,7 @@ File: LICENSE
 ================================================
 MIT License
 
-Copyright (c) [2025] [Robert Zaufall]
+Copyright (c) [2026] [Robert Zaufall]
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -318,7 +298,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mindm"
-version = "0.0.7.2"
+version = "0.0.7.3"
 authors = [
   { name="Robert Zaufall" },
 ]
@@ -377,7 +357,7 @@ include = ["mindm", "mindmap"]
 namespaces = false  # to disable scanning PEP 420 namespaces
 
 [tool.setuptools.package-data]
-mindm = ["as/*.scpt", "skills/*.skill"]
+mindm = ["as/*.scpt"]
 
 [tool.coverage.run]
 branch = true
@@ -6404,313 +6384,5 @@ def build_mapping(topic, guid_mapping):
         guid_mapping[topic.guid] = len(guid_mapping) + 1
     for sub in topic.subtopics:
         build_mapping(sub, guid_mapping)
-
-
-
-================================================
-File: skills/mindm-export/SKILL.md
-================================================
----
-name: mindm-export
-description: Export MindManager mindmaps to Mermaid, Markmap, Markdown, JSON, or YAML (HTML or data-only). Use when output must be generated or streamed, or when a map must be opened.
----
-
-# Mindm Export
-
-## Overview
-
-Export the current MindManager map to HTML or data-only output. Preferred
-one-liner is `uvx` (no install). Also available via `mindm-export` or
-`python -m mindmap.export`. Choose `mermaid_html`, `markmap_html`,
-`markdown_html`, or the data-only `mermaid`, `markmap`, `markdown`,
-`json`, `yaml`.
-
-## Quick start
-
-Run an export and open it (recommended, no install):
-
-```bash
-uvx --from mindm mindm-export --type mermaid_html --open
-```
-
-Run an export and open it (installed console script):
-
-```bash
-mindm-export --type mermaid_html --open
-```
-
-Run via the module entry point (source checkout):
-
-```bash
-python -m mindmap.export --type json --output /tmp/mindmap.json
-```
-
-Stream HTML to stdout:
-
-```bash
-mindm-export --type markmap --stream
-```
-
-Write to a specific file path:
-
-```bash
-mindm-export --type markdown_html --output /tmp/mindmap.htm
-```
-
-## Notes
-
-- Keep MindManager open with the target map active before running the CLI.
-- For macOS access, use `--macos-access applescript` (default) or `--macos-access appscript`.
-- For deeper flag and behavior details, read `skills/mindm-export/references/cli.md`.
-
-
-
-================================================
-File: skills/mindm-export/references/cli.md
-================================================
-# Mindm Export CLI
-
-## Location
-
-- Console script: `mindm-export`
-- Module entry point: `python -m mindmap.export`
-- Exports the currently open MindManager map via `mindmap.serialization`.
-
-## Recommended one-liner
-
-Run without installing (uvx + PyPI):
-
-```bash
-uvx --from mindm mindm-export --type mermaid_html --open
-```
-
-## Core flags
-
-- `--type {mermaid_html,markmap_html,markdown_html,mermaid,markmap,markdown,json,yaml}`.
-- `yaml` requires `pyyaml`; the CLI only imports it when that type is used.
-- `--open`: Write output to a file and open it.
-- `--stream`: Write output to stdout (no file is written).
-- `--output PATH`: Write to a specific path or directory.
-- `--macos-access {applescript,appscript}`: Optional; default is `applescript`.
-
-## Behavior details
-
-- Default output path is `./docs/<uuid>` when using `mindm-export` or
-  `python -m mindmap.export`.
-- Extensions are chosen by `--type` (HTML, `.json`, `.yaml`, `.md`, or `.mmd`).
-- `--stream` suppresses all other output; stdout is the selected format only.
-- `--open` implies file output; the CLI prints the path before opening it.
-- `markdown_html` exports also write a `.md` file next to the HTML file.
-
-## Schema
-
-- JSON schema for `json` lives at `docs/mindmap-json.schema.json`.
-- YAML schema (mirrors `json`) lives at `docs/mindmap-yaml.schema.json`.
-
-## Examples
-
-Mermaid, default output path:
-
-```bash
-mindm-export --type mermaid_html
-```
-
-Markmap, open after export:
-
-```bash
-mindm-export --type markmap_html --open
-```
-
-Markdown, write to a specific file:
-
-```bash
-mindm-export --type markdown_html --output /tmp/mindmap.htm
-```
-
-YAML, stream to stdout:
-
-```bash
-mindm-export --type yaml --stream
-```
-
-
-
-================================================
-File: skills/mindm-mindmap/SKILL.md
-================================================
----
-name: mindm-mindmap
-description: High-level MindManager mindmap operations via the mindm-mindmap CLI or python -m mindmap.actions. Use when a map must be read (mindmap, selection, grounding info), serialized to Mermaid, or created from Mermaid.
----
-
-# Mindm Mindmap
-
-## Overview
-
-Use the mindm-mindmap CLI to query the current MindManager map or create a new
-map from Mermaid. This skill targets high-level map operations that mirror the
-MCP server capabilities.
-
-## Quick start
-
-Get the current mindmap as JSON:
-
-```bash
-uvx --from mindm mindm-mindmap get-mindmap --mode content
-```
-
-Get the current selection:
-
-```bash
-mindm-mindmap get-selection --mode content
-```
-
-Get grounding information:
-
-```bash
-mindm-mindmap get-grounding-information --mode content
-```
-
-Serialize to Mermaid:
-
-```bash
-mindm-mindmap serialize-mermaid
-mindm-mindmap serialize-mermaid --mode full --id-only
-```
-
-Create a map from Mermaid:
-
-```bash
-mindm-mindmap create-from-mermaid --input /tmp/map.mmd
-```
-
-Create a map from Mermaid (full metadata or simplified indentation).
-The CLI auto-detects the format.
-
-Round-trip test (serialize → create):
-
-```bash
-mindm-mindmap serialize-mermaid --mode full | mindm-mindmap create-from-mermaid
-```
-
-## Notes
-
-- Keep MindManager open with the target map active before running the CLI.
-- For macOS, use --macos-access applescript (default) or appscript.
-- For full flag details, read skills/mindm-mindmap/references/cli.md.
-- For full Mermaid metadata (notes, links, icons, tags), read skills/mindm-mindmap/references/mermaid.md.
-- JSON responses return the raw data for the command. Errors return {"error": "...", "message": "..."}.
-
-
-
-================================================
-File: skills/mindm-mindmap/references/cli.md
-================================================
-# mindm-mindmap CLI
-
-## Entry points
-
-- Console script: mindm-mindmap
-- Module entry point: python -m mindmap.actions
-
-## Commands
-
-### Read
-
-- get-mindmap
-- get-selection
-- get-grounding-information
-- get-library-folder
-
-### Serialize
-
-- serialize-mermaid
-  - Default output is simplified Mermaid (no %% JSON comments).
-  - Use --mode full to include metadata comments; combine with --id-only to emit IDs only.
-
-### Create
-
-- create-from-mermaid
-  - Auto-detects full Mermaid (with %% metadata comments) vs simplified Mermaid.
-  - For metadata details (notes, links, icons, tags), see references/mermaid.md.
-
-## Shared options
-
-- --mode (full, content, text) for read and serialize commands
-- --turbo-mode for text-only operations (default off)
-- --charttype (auto, orgchart, radial)
-- --macos-access (applescript, appscript)
-- --json to force JSON output for text responses
-- --pretty to pretty-print JSON
-
-## Output shape
-
-- JSON responses return the raw data for the command. Errors return {"error": "...", "message": "..."}.
-- Text commands print raw output unless --json is provided.
-
-## Create options
-
-- --input /path/to/file.mmd
-- --text "mermaid text"
-- Or pipe Mermaid via stdin
-
-## Examples
-
-```bash
-python -m mindmap.actions get-mindmap --mode content
-mindm-mindmap serialize-mermaid --id-only
-mindm-mindmap create-from-mermaid --text "mindmap\n  Root"
-mindm-mindmap serialize-mermaid --mode full | mindm-mindmap create-from-mermaid
-```
-
-
-
-================================================
-File: skills/mindm-mindmap/references/mermaid.md
-================================================
-# Mermaid metadata guide
-
-Use this when constructing **full Mermaid** input for `create-from-mermaid`.
-Simplified Mermaid (indent-only) does not use metadata comments.
-
-## Rules
-
-- Every line must be valid Mermaid and include a topic label, e.g. `[Topic]`.
-- Root topic is just a label, e.g. `[Central Topic]`.
-- Full syntax attaches JSON metadata after `%%` on the same line.
-
-## Metadata example
-
-```
-mindmap
-  [Topic] %% {"id": 1, "notes": {"text": "Notes"}, "links": [{"text": "label", "url": "https://example.com"}], "references": [{"id_1": 1, "id_2": 2, "direction": 1}], "image": {"text": "C:\\path\\to\\image.png"}, "icons": [{"text": "StockIcon-36", "is_stock_icon": true, "index": 36}], "tags": ["tag1"]}
-```
-
-## Icon metadata (Windows stock icons)
-
-Use:
-
-```
-"icons": [{"text": "StockIcon-<index>", "is_stock_icon": true, "index": <index>}]
-```
-
-Available stock icon indices:
-
-- Arrow Down(66), Arrow Left(65), Arrow Right(37), Arrow Up(36)
-- Bomb(51), Book(67), Broken Connection(69), Calendar(8), Camera(41)
-- Cellphone(40), Check(62), Clock(7), Coffee Cup(59), Dollar(15)
-- Email(10), Emergency(49), Euro(16), Exclamation Mark(44), Fax(42)
-- Flag Black(20), Flag Blue(18), Flag Green(19), Flag Orange(21), Flag Purple(23)
-- Flag Red(17), Flag Yellow(22), Folder(71), Glasses(53), Hourglass(48)
-- House(13), Information(70), Judge Hammer(54), Key(52), Letter(9)
-- Lightbulb(58), Magnifying Glass(68), Mailbox(11)
-- Marker 1(25), Marker 2(26), Marker 3(27), Marker 4(28)
-- Marker 5(29), Marker 6(30), Marker 7(31), Meeting(61), Megaphone(12)
-- No Entry(50), Note(63), On Hold(47)
-- Padlock Locked(34), Padlock Unlocked(35), Phone(39), Question Mark(45)
-- Redo(57), Resource 1(32), Resource 2(33), Rocket(55), Rolodex(14)
-- Scales(56), Smiley Angry(5), Smiley Happy(2), Smiley Neutral(3), Smiley Sad(4)
-- Smiley Screaming(6), Stop(43), Thumbs Down(64), Thumbs Up(46)
-- Traffic Lights Red(24), Two End Arrow(38), Two Feet(60)
 
 

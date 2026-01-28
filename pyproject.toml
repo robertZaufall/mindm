@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mindm"
-version = "0.0.7.2"
+version = "0.0.7.3"
 authors = [
   { name="Robert Zaufall" },
 ]
@@ -63,7 +63,7 @@ include = ["mindm", "mindmap"]
 namespaces = false  # to disable scanning PEP 420 namespaces
 
 [tool.setuptools.package-data]
-mindm = ["as/*.scpt", "skills/*.skill"]
+mindm = ["as/*.scpt"]
 
 [tool.coverage.run]
 branch = true

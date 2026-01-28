@@ -9,4 +9,3 @@ global-exclude AGENTS.md
 global-exclude Makefile
 global-exclude llms.txt
 recursive-include mindm/as *.scpt
-recursive-include mindm/skills *.skill
