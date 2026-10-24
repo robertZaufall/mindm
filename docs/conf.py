@@ -125,3 +125,7 @@ def setup(app):
     if win32com and hasattr(win32com, 'client'):
         win32com.client.Dispatch = SafeMock()
         win32com.client.constants = SafeMock()
+
+# Shared website legal footer; keep the Furo navigation intact.
+html_show_copyright = False
+templates_path = ["_templates"]
