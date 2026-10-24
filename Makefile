@@ -53,7 +53,7 @@ coverage-smoke:
 # Create a release on Github
 release:
 	@if [ -z "$$VERSION" ]; then \
-		echo "Error: VERSION is required. Use 'make release VERSION=x.x.x'"; \
+		echo "Error: VERSION is required. Use 'make release VERSION=x.x.x.x'"; \
 		exit 1; \
 	fi
 	@echo "Creating release v$$VERSION..."

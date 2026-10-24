@@ -23,3 +23,10 @@ Follow the existing short, imperative commit style (`more examples added`, `exte
 
 ## Documentation & Release Tips
 Document API additions in `docs/*.rst`, then run `make docs` to confirm clean builds. When preparing a release, use `make release VERSION=x.y.z` after bumping via `make update-version`, and ensure `dist/` artifacts come from the matching commit.
+
+## Shared infrastructure reference
+
+Read [shared infrastructure rules](../infrastructure/AGENTS.md) and the
+[project infrastructure note](../infrastructure/mindm.md) for cross-project
+ownership, access and preservation boundaries. Keep implementation and operational
+procedures in this repository.
